@@ -15,7 +15,7 @@
         <?php require_once(__DIR__ . '/header.php'); ?>
         <article>
             <br><h3>Bienvenue ! Quelles dates souhaitez-vous extraire ?</h3></br>
-            <?php require_once(__DIR__ . '/formulaire_dates.php'); ?>
+            <?php require_once(__DIR__ . '/date_form.php'); ?>
         </article></br>
     </div>
 <!-- inclusion du bas de page du site -->
