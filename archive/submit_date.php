@@ -77,7 +77,7 @@ $totalSum = array_sum(array_column($time_sum,'total_time'));
             <!--inclusion du formulaire de sélection des temps-->
             <?php require_once(__DIR__ . '/date_form.php'); ?>
             <!--affichage d'un message récupitulant la période sélectionnée si celle-ci contient bien des temps-->
-            <?php if (!empty($selection_temps)) : ?>
+            <?php if (!empty($selected_times)) : ?>
                 <div class="alert alert-success" role="alert">Période du <strong><?php echo($getData['start_date'])?></strong> au <strong><?php echo($getData['end_date'])?></strong></div>
                     <table style="border-collapse: collapse; border: 1px solid black; width: 50%;">
                         <tr>

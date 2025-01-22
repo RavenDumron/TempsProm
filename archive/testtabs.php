@@ -1,4 +1,3 @@
-
 <html>
 	<head>
 		<title>jQuery: AJAX Tabs</title>	
@@ -11,7 +10,7 @@
 			.container
 			{
 				float: left;
-				width: 400px;
+				width: 852px;
 				border: 1px solid #000000;
 			}
 			.navcontainer ul
@@ -24,7 +23,7 @@
 				font-size:12px;
 				margin:0pt;
 				padding:0pt;
-				width:100%;
+				width: 100%;
 			}
 			.navcontainer ul li
 			{
@@ -117,10 +116,18 @@
 		
 			<div class="navcontainer">
 				<ul>
-					<li><a id="tab1" href="tabs.php?id=1">Google</a></li>
-					<li><a id="tab2" href="tabs.php?id=2">Yahoo</a></li>
-					<li><a id="tab3" href="tabs.php?id=3">Hotmail</a></li>
-					<li><a id="tab4" href="tabs.php?id=4">Twitter</a></li>
+					<li><a id="tab1" href="tabs.php?id=1">Janvier</a></li>
+					<li><a id="tab2" href="tabs.php?id=2">Février</a></li>
+					<li><a id="tab3" href="tabs.php?id=3">Mars</a></li>
+					<li><a id="tab4" href="tabs.php?id=4">Avril</a></li>
+                    <li><a id="tab5" href="tabs.php?id=5">Mai</a></li>
+                    <li><a id="tab6" href="tabs.php?id=6">Juin</a></li>
+                    <li><a id="tab7" href="tabs.php?id=7">Juillet</a></li>
+                    <li><a id="tab8" href="tabs.php?id=8">Août</a></li>
+                    <li><a id="tab9" href="tabs.php?id=9">Septembre</a></li>
+                    <li><a id="tab10" href="tabs.php?id=10">Octobre</a></li>
+                    <li><a id="tab11" href="tabs.php?id=11">Novembre</a></li>
+                    <li><a id="tab12" href="tabs.php?id=12">Décembre</a></li>
 				</ul>
 			</div>
 
