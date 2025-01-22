@@ -34,10 +34,11 @@ require_once(__DIR__ . '/variables.php');
     <div class="container">
         <?php require_once(__DIR__ . '/header.php'); ?>
         <article>
-            <?php require_once(__DIR__ . '/year_form.php'); ?>
+            <br><?php require_once(__DIR__ . '/year_form.php'); ?>
             <!--liste des onglets proposés-->
             <div id="tabs">
             <ul>
+                <li><a href="#tabs-0">Période <?php echo($year1 . '-' . $year2)?></a></li>
                 <li><a href="#tabs-1">Octobre</a></li>
                 <li><a href="#tabs-2">Novembre</a></li>
                 <li><a href="#tabs-3">Décembre</a></li>
@@ -53,6 +54,26 @@ require_once(__DIR__ . '/variables.php');
             </ul>
 
             <!--contenu des onglets-->
+            <div id="tabs-0">
+                <div><strong>Temps d'intervention pour la période <?php echo ($year1 . '-' . $year2)?></strong></div></br>
+                <table style="border-collapse: collapse; border: 1px solid black; width: 50%;">
+                    <tr>
+                        <th style="border: 1px solid black; padding: 4px; text-align: left;">Société</th>
+                        <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps total</th>
+                    </tr>
+                    <?php foreach ($year_sum as $yearly_client_times): ?>
+                        <tr>
+                            <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo $yearly_client_times['name'];?></td>
+                            <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo gmdate("H:i:s", $yearly_client_times['total_time']);?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <tr>
+                        <th style="border: 1px solid black; padding: 4px; text-align: left;">Total</th>
+                        <th style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo gmdate("H:i:s", $yearlyTotalSum);?></th>
+                    </tr>
+                </table>
+            </div>
+
             <div id="tabs-1">
                 <div><strong>Temps d'intervention pour octobre <?php echo ($year1)?></strong></div></br>
                 <table style="border-collapse: collapse; border: 1px solid black; width: 50%;">
@@ -123,7 +144,7 @@ require_once(__DIR__ . '/variables.php');
                         <?php foreach ($jan_sum as $january_client_times): ?>
                             <tr>
                                 <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo $january_client_times['name'];?></td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo gmdate("H:i:s", $januart_client_times['total_time']);?></td>
+                                <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo gmdate("H:i:s", $january_client_times['total_time']);?></td>
                             </tr>
                         <?php endforeach; ?>
                             <tr>

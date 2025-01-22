@@ -48,7 +48,7 @@ $SQLyearExtract ->execute([
         
 $yearExtract = $SQLyearExtract->fetchAll();
 
-// initialisation des tableaux pour chaque mois
+// initialisation des tableaux pour chaque mois (dans l'ordre de l'année fiscale)
 $october = [];
 $november = [];
 $december = [];
@@ -62,7 +62,7 @@ $july = [];
 $august = [];
 $september = [];
 
-// Boucle pour remplir chaque tableau de mois individuellement
+// Boucle pour remplir chaque tableau de mois individuellement, dans l'ordre d'une année standard car la boucle s'execute de janvier à décembre
 foreach ($yearExtract as $intervention) {
     $month = date('m', strtotime($intervention['intervention_start']));
     
@@ -107,7 +107,7 @@ foreach ($yearExtract as $intervention) {
 }
 
         
-//cumule les temps de chaque client pour afficher un seul résultat   
+//cumule les temps de chaque client pour afficher un seul résultat (dans l'ordre de l'année fiscale)  
 $oct_sum  = array();
 foreach($october as $sum1){
     if(array_key_exists($sum1['name'],$oct_sum)){
@@ -240,7 +240,7 @@ foreach($september as $sum12){
     }
 }
 
-//Calcul du total de l'ensemble des temps  
+//Calcul du total de l'ensemble des temps (dans l'ordre de l'année fiscale)
 $octoberTotalSum = array_sum(array_column($oct_sum, 'total_time'));
 $novemberTotalSum = array_sum(array_column($nov_sum, 'total_time'));
 $decemberTotalSum = array_sum(array_column($dec_sum, 'total_time'));      

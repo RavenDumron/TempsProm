@@ -43,6 +43,14 @@ insert into `interventions` (`intervention_id`, `intervention_start`, `intervent
 insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (17, '2024-12-09 11:25:03', '2024-12-09 11:33:03', '480', 2);
 insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (18, '2024-12-10 09:19:05', '2024-12-10 09:49:05', '1800', 3);
 insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (19, '2024-12-11 10:25:03', '2024-12-11 11:25:03', '3600', 0);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (20, '2025-1-05 13:25:03', '2024-12-05 14:25:03', '3600', 2);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (21, '2025-1-06 09:19:05', '2024-12-03 09:49:05', '1800', 3);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (22, '2025-1-07 10:25:03', '2024-12-05 11:25:03', '3600', 4);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (23, '2025-1-07 13:25:03', '2024-12-05 14:25:03', '3600', 2);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (24, '2025-1-09 09:33:25', '2024-12-09 10:33:25', '3600', 1);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (25, '2025-1-09 11:25:03', '2024-12-09 11:33:03', '480', 2);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (26, '2025-1-10 09:19:05', '2024-12-10 09:49:05', '1800', 3);
+insert into `interventions` (`intervention_id`, `intervention_start`, `intervention_end`, `total_time`, `client_id`) values (27, '2025-1-11 10:25:03', '2024-12-11 11:25:03', '3600', 0);
 
 delete from `clients`;
 insert into `clients` (`client_id`, `name`, `budgeted_time`) values ( 0, "Client 1", "1800000");
