@@ -145,7 +145,6 @@ $sumCounter = 0;
 // fait également la somme totale du temps d'infogérance et HM dans $TotalSumIn# et $TotalSumHM#
 while ($sumCounter < 13)
 {
-    ${'clientCounter' . $sumCounter} = 0;
     foreach(${'extract' . $sumCounter} as $currentSum){
         if(array_key_exists($currentSum['clients_nom'],${'sum' . $sumCounter})){
             ${'sum' . $sumCounter}[$currentSum['clients_nom']]['temps_infogerance'] += $currentSum['temps_infogerance'];
@@ -154,7 +153,6 @@ while ($sumCounter < 13)
         }
         else{
             ${'sum' . $sumCounter}[$currentSum['clients_nom']]  = $currentSum;
-            ${'clientCounter' . $sumCounter} = ${'clientCounter' . $sumCounter}+1;
         }
     }
     ${'sum' . $sumCounter}['Prometech']['temps_infogerance'] = '0';

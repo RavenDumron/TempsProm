@@ -34,9 +34,9 @@ require_once(__DIR__ . '/functions.php');
 </head>
 <body class="d-flex flex-column min-vh-100">
     <div class="container">
-        <?php require_once(__DIR__ . '/header.php'); ?>
+        <?php require_once(__DIR__ . '/header.php'); //intégration du header ?>
         <article>
-            <br><?php require_once(__DIR__ . '/year_form.php'); ?>
+            <br><?php require_once(__DIR__ . '/year_form.php'); //intégration du forumlaire de sélection de l'année fiscale ?>
             <!--liste des onglets proposés-->
             <div id="tabs">
             <ul>
@@ -56,52 +56,109 @@ require_once(__DIR__ . '/functions.php');
             </ul>
 
 
-            <!--contenu des onglets-->
+            <!--boucle de génération du contenu des onglets-->
             <?php while ($tabCounter < 13) : ?> 
-                 <!--script pour les boutons de détail-->
-                <?php $buttonCounter = 0;
-                while ($buttonCounter <= (${'clientCounter' . $tabCounter} * 2)) : ?>
-                    <script type="text/javascript">
-                    $(document).ready(function() {
-
-                        $('#wrapper<?php echo ($buttonCounter)?>').dialog({
-                            autoOpen: false,
-                            title: 'Basic Dialog'
-                        });
-                        $('#opener<?php echo ($buttonCounter)?>').click(function() {
-                            $('#wrapper<?php echo ($buttonCounter)?>').dialog('open');
-                        //return false;
-                        });
-                    });
-                    </script>
-                <?php endwhile; ?>
-                <div id="tabs-<?php echo ($tabCounter)?>">
+                <div id="tabs-<?php echo ($tabCounter)?>"> <!--donne le nom de l'onglet en fonction de l'état actuel du compteur de contrôle de la boucle-->
                      <div><strong>Temps d'intervention pour la période <?php echo(fillPeriod($tabCounter))?></strong></div></br>
-                    <?php if ((${'TotalSumIn' . $tabCounter} !== 0) && (${'TotalSumHM' . $tabCounter} !== 0)) : ?>
+                    <?php if ((${'TotalSumIn' . $tabCounter} !== 0) && (${'TotalSumHM' . $tabCounter} !== 0)) : ?><!--s'assure qu'il y a bien du contenu à afficher, sinon renvoie une erreur-->
                         <table style="border-collapse: collapse; border: 1px solid black; width: 100%;">
                             <tr>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Société <?php echo (${'clientCounter' . $tabCounter}); ?></th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps infogérance</th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps hors mission</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Société</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps infogérance</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps hors mission</th>
                             </tr>
-                            <?php foreach (${'sum' . $tabCounter} as $client_times): ?>
-                                <?php if ($client_times['clients_nom'] != 'Prometech') : ?>
+                            <?php $clientCounter = 1; //activation du compteur pour rendre unique chaque bouton de sous-tableau de détail de temps?>
+                            <?php foreach (${'sum' . $tabCounter} as $client_times): //boucle pour générer une ligne de temps pour chaque société ?>
+                                <?php if ($client_times['clients_nom'] != 'Prometech') : //exclusion de Prometech pour pouvoir le mettre en fin de tableau?>
+                                        <!--script pour les boutons permettant d'afficher le sous-tableau de détail de chaque temps-->
+                                        <!--nomenclature boutons : Tab(numéro de l'onglet en cours)/Wrapper ou Opener A ou B (A=infogerance, B=hors mission)/numéro du client en cours-->
+                                        <script type="text/javascript">
+                                        $(document).ready(function() {
+
+                                            $('#Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>').dialog({
+                                                autoOpen: false,
+                                                title: 'Détail infogérance <?php echo($client_times['clients_nom'])?>'
+                                            });
+                                            $('#Tab<?php echo ($tabCounter)?>OpenerA<?php echo ($clientCounter)?>').click(function() {
+                                                $('#Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>').dialog('open');
+                                            });
+                                            $('#Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>').dialog({
+                                                autoOpen: false,
+                                                title: 'Détail infogérance <?php echo($client_times['clients_nom'])?>'
+                                            });
+                                            $('#Tab<?php echo ($tabCounter)?>OpenerB<?php echo ($clientCounter)?>').click(function() {
+                                                $('#Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>').dialog('open');
+                                            });
+                                        });
+                                        </script>
                                     <tr>
-                                        <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo $client_times['clients_nom'];?></td>
-                                        <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor($client_times['temps_infogerance'] / 3600) . gmdate(":i:s", $client_times['temps_infogerance'] % 3600);?></td>
-                                        <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor($client_times['temps_hm'] / 3600) . gmdate(":i:s", $client_times['temps_hm'] % 3600);?></td>
+                                        <!--temps d'infogérance-->
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo $client_times['clients_nom'];?></td>
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <!--conversion des secondes en heures:minutes:secondes-->
+                                            <?php echo floor($client_times['temps_infogerance'] / 3600) . gmdate(":i:s", $client_times['temps_infogerance'] % 3600);?>
+                                            <!--bouton pour afficher le sous-tableau de détail des temps, si présent-->
+                                            <?php if ($client_times['temps_infogerance'] > 0) :?>
+                                                <button id="Tab<?php echo ($tabCounter)?>OpenerA<?php echo ($clientCounter)?>" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                                    <i class="fa-regular fa-window-restore"></i>
+                                                </button>
+                                                <div id="Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>">
+                                                    <p>Display information A for customer <?php echo($clientCounter) ?></p>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <!--temps hors mission-->
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <!--conversion des secondes en heures:minutes:secondes-->
+                                            <?php echo floor($client_times['temps_hm'] / 3600) . gmdate(":i:s", $client_times['temps_hm'] % 3600);?>
+                                            <!--bouton pour afficher le sous-tableau de détail des temps-->
+                                            <?php if ($client_times['temps_hm'] > 0) :?>
+                                                <button id="Tab<?php echo ($tabCounter)?>OpenerB<?php echo ($clientCounter)?>" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                                    <i class="fa-regular fa-window-restore"></i>
+                                                </button>
+                                                <div id="Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>">
+                                                    <p>Display information B for customer <?php echo($clientCounter) ?></p>
+                                                </div> 
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
+                                    <?php $clientCounter++; ?>
                                 <?php endif; ?>
                             <?php endforeach; ?>
+                            <!--script de bouton pour Prometech-->
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+
+                                    $('#Tab<?php echo ($tabCounter)?>WrapperP').dialog({
+                                        autoOpen: false,
+                                        title: 'Détail clients Prometech'
+                                    });
+                                    $('#Tab<?php echo ($tabCounter)?>OpenerP').click(function() {
+                                        $('#Tab<?php echo ($tabCounter)?>WrapperP').dialog('open');
+                                    });
+                                });
+                                </script>
                             <tr>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;">Prometech</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_infogerance'] % 3600);?></td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_hm'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_hm'] % 3600);?></td>
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Prometech</td>
+                                <!--conversion des secondes en heures:minutes:secondes ; pas de bouton de détail car doit être 0:00:00-->
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_infogerance'] % 3600);?></td>
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                    <?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_hm'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_hm'] % 3600);?>
+                                    <!--bouton pour afficher le sous-tableau de détail des temps hors mission de Prometech-->
+                                    <?php if (${'sum' . $tabCounter}['Prometech']['temps_hm'] > 0) :?>
+                                        <button id="Tab<?php echo ($tabCounter)?>OpenerP" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                            <i class="fa-regular fa-window-restore"></i>
+                                        </button>
+                                        <div id="Tab<?php echo ($tabCounter)?>WrapperP">
+                                            <p>Display Prometech information</p>
+                                        </div> 
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <tr>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Total</th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'TotalSumHM' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumHM' . $tabCounter} % 3600);?></th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Total</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumHM' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumHM' . $tabCounter} % 3600);?></th>
                             </tr>
                         </table>
                     <?php else : ?>
@@ -113,7 +170,7 @@ require_once(__DIR__ . '/functions.php');
         </article></br>
     </div>
 
-<!-- inclusion du bas de page du site -->
+<!-- intégration du footer -->
 <?php require_once(__DIR__ . '/footer.php'); ?>
 </body>
 </html>
