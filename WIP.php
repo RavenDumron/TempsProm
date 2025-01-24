@@ -55,14 +55,32 @@ require_once(__DIR__ . '/functions.php');
                 <li><a href="#tabs-9">Septembre</a></li>
             </ul>
 
+
             <!--contenu des onglets-->
             <?php while ($tabCounter < 13) : ?> 
+                 <!--script pour les boutons de détail-->
+                <?php $buttonCounter = 0;
+                while ($buttonCounter <= (${'clientCounter' . $tabCounter} * 2)) : ?>
+                    <script type="text/javascript">
+                    $(document).ready(function() {
+
+                        $('#wrapper<?php echo ($buttonCounter)?>').dialog({
+                            autoOpen: false,
+                            title: 'Basic Dialog'
+                        });
+                        $('#opener<?php echo ($buttonCounter)?>').click(function() {
+                            $('#wrapper<?php echo ($buttonCounter)?>').dialog('open');
+                        //return false;
+                        });
+                    });
+                    </script>
+                <?php endwhile; ?>
                 <div id="tabs-<?php echo ($tabCounter)?>">
                      <div><strong>Temps d'intervention pour la période <?php echo(fillPeriod($tabCounter))?></strong></div></br>
                     <?php if ((${'TotalSumIn' . $tabCounter} !== 0) && (${'TotalSumHM' . $tabCounter} !== 0)) : ?>
                         <table style="border-collapse: collapse; border: 1px solid black; width: 100%;">
                             <tr>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Société</th>
+                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Société <?php echo (${'clientCounter' . $tabCounter}); ?></th>
                                 <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps infogérance</th>
                                 <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps hors mission</th>
                             </tr>
