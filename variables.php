@@ -56,17 +56,16 @@ $contracts = $SQLcontracts->fetchAll();
 $contractsCombined = [];
 
 foreach ($contracts as $contract) {
-    if ($contract['clients contract fermeture'] < $yearEnd) {
-        if(array_key_exists($contract['clients_nom'],$contractsCombined)){
-            $contractsCombined[$contract['clients_nom']]['temps_infogerance'] += $contract['temps_infogerance'];
-            $contractsCombined[$contract['clients_nom']]['temps_hm'] += $contract['temps_hm'];
-            $contractsCombined[$contract['clients_nom']]['clients_nom'] = $contract['clients_nom'];
-        }
-        else{
-            $contractsCombined[$contract['clients_nom']]  = $contract;
-        }
+    if(array_key_exists($contract['clients_nom'],$contractsCombined) && $contract['clients_contrat_ouverture'] > $yearStart) {
+        $contractsCombined[$contract['clients_nom']]['year2Budget'] = $contract['clients_contrat_prix_vente_ht'];
+        $contractsCombined[$contract['clients_nom']]['year2Months'] = $yearEnd - $contract['clients_contrat_ouverture'];
+        $contractsCombined[$contract['clients_nom']]['clients_nom'] = $contract['clients_nom'];
+    }
+    else{
+        $contractsCombined[$contract['clients_nom']]  = $contract;
     }
 }
+
 
 // récupération des interventions dans la base SQL pour l'année sélectionnée en séparant par type d'intérvention
 $SQLyearExtract = $mysqlClient->prepare(
