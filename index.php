@@ -34,9 +34,9 @@ require_once(__DIR__ . '/functions.php');
 </head>
 <body class="d-flex flex-column min-vh-100">
     <div class="container">
-        <?php require_once(__DIR__ . '/header.php'); ?>
+        <?php require_once(__DIR__ . '/header.php'); //intégration du header ?>
         <article>
-            <br><?php require_once(__DIR__ . '/year_form.php'); ?>
+            <br><?php require_once(__DIR__ . '/year_form.php'); //intégration du forumlaire de sélection de l'année fiscale ?>
             <!--liste des onglets proposés-->
             <div id="tabs">
             <ul>
@@ -55,38 +55,204 @@ require_once(__DIR__ . '/functions.php');
                 <li><a href="#tabs-9">Septembre</a></li>
             </ul>
 
-            <!--contenu des onglets-->
+
+            <!--boucle de génération du contenu des onglets-->
             <?php while ($tabCounter < 13) : ?> 
-                <div id="tabs-<?php echo ($tabCounter)?>">
-                     <div><strong>Temps d'intervention pour la période <?php echo(fillPeriod($tabCounter))?></strong></div></br>
-                    <?php if ((${'TotalSumIn' . $tabCounter} !== 0) && (${'TotalSumHM' . $tabCounter} !== 0)) : ?>
+                <div id="tabs-<?php echo ($tabCounter)?>"> <!--donne le nom de l'onglet en fonction de l'état actuel du compteur de contrôle de la boucle-->
+                    <div><strong>Temps d'intervention pour la période <?php echo(fillPeriod($tabCounter))?></strong></div>
+                    <div id="form-help" class="form-text"><?php if (($tabCounter > 0) && (${'TotalSumIn' . $tabCounter} !== 0) && (${'TotalSumHM' . $tabCounter} !== 0)): ?>Cliquer sur <i class="fa-regular fa-window-restore"></i> pour afficher le détail.<?php endif; ?></div></br>
+                    <?php if ((${'TotalSumIn' . $tabCounter} !== 0) && (${'TotalSumHM' . $tabCounter} !== 0)): // s'assure qu'il y a bien du contenu à afficher, sinon renvoie une erreur ?>
                         <table style="border-collapse: collapse; border: 1px solid black; width: 100%;">
                             <tr>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Société</th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps infogérance</th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Temps hors mission</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Société</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps infogérance</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps hors mission</th>
                             </tr>
-                            <?php foreach (${'sum' . $tabCounter} as $client_times): ?>
-                                <?php if ($client_times['clients_nom'] != 'Prometech') : ?>
+                            <?php $clientCounter = 1; //activation du compteur pour rendre unique chaque bouton de sous-tableau de détail de temps?>
+                            <?php foreach (${'sum' . $tabCounter} as $client_times): //boucle pour générer une ligne de temps pour chaque société ?>
+                                <?php if ($client_times['clients_nom'] != 'Prometech') : //exclusion de Prometech pour pouvoir le mettre en fin de tableau?>
+                                        <!--script pour les boutons permettant d'afficher le sous-tableau de détail de chaque temps-->
+                                        <!--nomenclature boutons : Tab(numéro de l'onglet en cours)/Wrapper ou Opener A ou B (A=infogerance, B=hors mission)/numéro du client en cours-->
+                                        <script type="text/javascript">
+                                        $(document).ready(function() {
+
+                                            $('#Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>').dialog({
+                                                autoOpen: false,
+                                                title: 'Détail infogérance <?php echo($client_times['clients_nom'])?>',
+                                                width: 'auto'
+                                            });
+                                            $('#Tab<?php echo ($tabCounter)?>OpenerA<?php echo ($clientCounter)?>').click(function() {
+                                                $('#Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>').dialog('open');
+                                            });
+                                            $('#Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>').dialog({
+                                                autoOpen: false,
+                                                title: 'Détail infogérance <?php echo($client_times['clients_nom'])?>',
+                                                width: 'auto'
+                                            });
+                                            $('#Tab<?php echo ($tabCounter)?>OpenerB<?php echo ($clientCounter)?>').click(function() {
+                                                $('#Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>').dialog('open');
+                                            });
+                                        });
+                                        </script>
                                     <tr>
-                                        <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo $client_times['clients_nom'];?></td>
-                                        <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor($client_times['temps_infogerance'] / 3600) . gmdate(":i:s", $client_times['temps_infogerance'] % 3600);?></td>
-                                        <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor($client_times['temps_hm'] / 3600) . gmdate(":i:s", $client_times['temps_hm'] % 3600);?></td>
+                                        <!--temps d'infogérance-->
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo $client_times['clients_nom'];?></td>
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <!--conversion des secondes en heures:minutes:secondes-->
+                                            <?php echo floor($client_times['temps_infogerance'] / 3600) . gmdate(":i:s", $client_times['temps_infogerance'] % 3600);?>
+                                            <!--bouton pour afficher le sous-tableau de détail des temps dans les onglets de mois, si présent-->
+                                            <?php if (($tabCounter > 0) && ($client_times['temps_infogerance'] > 0)) :?>
+                                                <button id="Tab<?php echo ($tabCounter)?>OpenerA<?php echo ($clientCounter)?>" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                                    <i class="fa-regular fa-window-restore"></i>
+                                                </button>
+                                                <div id="Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>">
+                                                    <table style="border-collapse: collapse; border: 1px solid black; width: 100%;">
+                                                        <tr>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Technicien</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Début d'intervention</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Fin d'intervention</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps total</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Détail d'intervention</th>
+                                                        </tr>
+                                                        <?php foreach (${'extract' . $tabCounter} as $client_details): ?>
+                                                            <?php if (($client_details['clients_nom'] === $client_times['clients_nom']) && ($client_details['temps_infogerance'] !== NULL)): ?>
+                                                                <tr>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo ($client_details['techniciens_nom'] . ' ' . $client_details['techniciens_prenom']);?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_date_debut']?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_date_fin']?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo floor($client_details['temps_infogerance'] / 3600) . gmdate(":i:s", $client_details['temps_infogerance'] % 3600);?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_lib']?>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endif ; ?>
+                                                        <?php endforeach ; ?>
+                                                    </table>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <!--temps hors mission-->
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <!--conversion des secondes en heures:minutes:secondes-->
+                                            <?php echo floor($client_times['temps_hm'] / 3600) . gmdate(":i:s", $client_times['temps_hm'] % 3600);?>
+                                            <!--bouton pour afficher le sous-tableau de détail des temps-->
+                                            <?php if (($tabCounter > 0) && ($client_times['temps_hm'] > 0)) :?>
+                                                <button id="Tab<?php echo ($tabCounter)?>OpenerB<?php echo ($clientCounter)?>" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                                    <i class="fa-regular fa-window-restore"></i>
+                                                </button>
+                                                <div id="Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>">
+                                                    <table style="border-collapse: collapse; border: 1px solid black; width: 100%;">
+                                                        <tr>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Technicien</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Début d'intervention</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Fin d'intervention</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps total</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Détail d'intervention</th>
+                                                        </tr>
+                                                        <?php foreach (${'extract' . $tabCounter} as $client_details): ?>
+                                                            <?php if (($client_details['clients_nom'] === $client_times['clients_nom']) && ($client_details['temps_hm'] !== NULL)): ?>
+                                                                <tr>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo ($client_details['techniciens_nom'] . ' ' . $client_details['techniciens_prenom']);?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_date_debut']?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_date_fin']?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo floor($client_details['temps_hm'] / 3600) . gmdate(":i:s", $client_details['temps_hm'] % 3600);?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_lib']?>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endif ; ?>
+                                                        <?php endforeach ; ?>
+                                                    </table>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
+                                    <?php $clientCounter++; ?>
                                 <?php endif; ?>
                             <?php endforeach; ?>
+                            <!--script de bouton pour Prometech-->
+                            <script type="text/javascript">
+                                $(document).ready(function() {
+
+                                    $('#Tab<?php echo ($tabCounter)?>WrapperP').dialog({
+                                        autoOpen: false,
+                                        title: 'Détail clients Prometech',
+                                        width: 'auto'
+                                    });
+                                    $('#Tab<?php echo ($tabCounter)?>OpenerP').click(function() {
+                                        $('#Tab<?php echo ($tabCounter)?>WrapperP').dialog('open');
+                                    });
+                                });
+                                </script>
                             <tr>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;">Prometech</td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_infogerance'] % 3600);?></td>
-                                <td style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_hm'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_hm'] % 3600);?></td>
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Prometech</td>
+                                <!--conversion des secondes en heures:minutes:secondes ; pas de bouton de détail car doit être 0:00:00-->
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_infogerance'] % 3600);?></td>
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                    <?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_hm'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_hm'] % 3600);?>
+                                    <!--bouton pour afficher le sous-tableau de détail des temps hors mission de Prometech-->
+                                    <?php if (($tabCounter > 0) && (${'sum' . $tabCounter}['Prometech']['temps_hm'] > 0)) :?>
+                                        <button id="Tab<?php echo ($tabCounter)?>OpenerP" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
+                                            <i class="fa-regular fa-window-restore"></i>
+                                        </button>
+                                        <div id="Tab<?php echo ($tabCounter)?>WrapperP">
+                                                    <table style="border-collapse: collapse; border: 1px solid black; width: 100%;">
+                                                        <tr>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Technicien</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Début d'intervention</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Fin d'intervention</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps total</th>
+                                                            <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Détail d'intervention</th>
+                                                        </tr>
+                                                        <?php foreach (${'extract' . $tabCounter} as $client_details): ?>
+                                                            <?php if (($client_details['clients_nom'] === 'Prometech') && ($client_details['temps_hm'] !== NULL)): ?>
+                                                                <tr>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo ($client_details['techniciens_nom'] . ' ' . $client_details['techniciens_prenom']);?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_date_debut']?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_date_fin']?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo floor($client_details['temps_hm'] / 3600) . gmdate(":i:s", $client_details['temps_hm'] % 3600);?>
+                                                                    </td>
+                                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                                        <?php echo $client_details['intervention_lib']?>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endif ; ?>
+                                                        <?php endforeach ; ?>
+                                                    </table>
+                                                </div>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                             <tr>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;">Total</th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
-                                <th style="border: 1px solid black; padding: 4px; text-align: left;"><?php echo floor(${'TotalSumHM' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumHM' . $tabCounter} % 3600);?></th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Total</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumHM' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumHM' . $tabCounter} % 3600);?></th>
                             </tr>
                         </table>
-                    <?php else : ?>
+                    <?php else : // retour d'erreur si aucun temps enregistré ?>
                         <div class="alert alert-danger" role="alert">Aucune intervention enregistrée pour la période <strong><?php echo(fillPeriod($tabCounter))?></strong></div>
                     <?php endif; ?>
                 </div>
@@ -95,7 +261,7 @@ require_once(__DIR__ . '/functions.php');
         </article></br>
     </div>
 
-<!-- inclusion du bas de page du site -->
+<!-- intégration du footer -->
 <?php require_once(__DIR__ . '/footer.php'); ?>
 </body>
 </html>

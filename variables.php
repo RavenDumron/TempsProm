@@ -32,20 +32,56 @@ $year2 = ($year1 + 1);
 $yearStart = $year1 . '-10-1';
 $yearEnd = $year2 . '-9-30';
 
-// récupération des données dans la base SQL pour l'année sélectionnée en séparant par type d'intérvention
+// récupération des contrats dans la base SQL pour l'année sélectionnée
+$SQLcontracts = $mysqlClient->prepare(
+    "SELECT 
+        c.clients_nom, 
+        cc.clients_contrat_ouverture,
+        cc.clients_contrat_fermeture,
+        cc.clients_contrat_prix_vente_ht
+    FROM clients_contrat cc 
+    INNER JOIN clients c 
+    ON cc.clients_id = c.clients_id 
+    WHERE cc.clients_contrat_fermeture >= :yearStart AND cc.clients_contrat_ouverture <= :yearEnd
+    ORDER BY c.clients_nom ASC"
+    );
+
+$SQLcontracts ->execute([
+    'yearStart' => $yearStart,
+    'yearEnd' => $yearEnd,
+]);
+
+$contracts = $SQLcontracts->fetchAll();
+
+$contractsCombined = [];
+
+foreach ($contracts as $contract) {
+    if ($contract['clients contract fermeture'] < $yearEnd) {
+        if(array_key_exists($contract['clients_nom'],$contractsCombined)){
+            $contractsCombined[$contract['clients_nom']]['temps_infogerance'] += $contract['temps_infogerance'];
+            $contractsCombined[$contract['clients_nom']]['temps_hm'] += $contract['temps_hm'];
+            $contractsCombined[$contract['clients_nom']]['clients_nom'] = $contract['clients_nom'];
+        }
+        else{
+            $contractsCombined[$contract['clients_nom']]  = $contract;
+        }
+    }
+}
+
+// récupération des interventions dans la base SQL pour l'année sélectionnée en séparant par type d'intérvention
 $SQLyearExtract = $mysqlClient->prepare(
     "SELECT 
         c.clients_nom, 
         i.intervention_date_debut, 
-        it.intervention_type_id,
-        t.techniciens_id,
+        i.intervention_date_fin, 
+        i.intervention_lib,
+        t.techniciens_nom,
+        t.techniciens_prenom,
         CASE WHEN i.intervention_type_id = '1' THEN TIME_TO_SEC (i.intervention_temp) ELSE NULL END AS 'temps_infogerance', 
         CASE WHEN i.intervention_type_id IN ('2', '6', '9', '12','13') THEN TIME_TO_SEC (i.intervention_temp) ELSE NULL END AS 'temps_hm'
     FROM intervention i 
     INNER JOIN clients c 
     ON i.clients_id = c.clients_id 
-    INNER JOIN intervention_type it 
-    ON i.intervention_type_id = it.intervention_type_id
     INNER JOIN techniciens t 
     ON i.techniciens_id = t.techniciens_id
     WHERE 
