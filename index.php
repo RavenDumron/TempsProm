@@ -131,6 +131,7 @@ require_once(__DIR__ . '/variables.php');
                                                             . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract1Budget'] / $contractsCombined[$currentClient]['contract1Months']) /50 *3600) % 3600);
                                                         ?>
                                                     </td>
+                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
                                                 <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
                                                 <?php elseif (check_in_range($contractsCombined[$currentClient]['contract2Start'], $contractsCombined[$currentClient]['contract2End'], $currentMonth)): ?>
                                                     <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
@@ -139,6 +140,7 @@ require_once(__DIR__ . '/variables.php');
                                                             . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract2Budget'] / $contractsCombined[$currentClient]['contract2Months']) /50 *3600) % 3600);
                                                         ?>
                                                     </td>
+                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
                                                 <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
                                                     <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                                         <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
@@ -161,6 +163,7 @@ require_once(__DIR__ . '/variables.php');
                                                             . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract1Budget'] / $contractsCombined[$currentClient]['contract1Months']) /50 *3600) % 3600);
                                                         ?>
                                                     </td>
+                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
                                                 <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
                                                 <?php elseif (check_in_range($contractsCombined[$currentClient]['contract2Start'], $contractsCombined[$currentClient]['contract2End'], $currentMonth)): ?>
                                                     <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
@@ -169,6 +172,7 @@ require_once(__DIR__ . '/variables.php');
                                                             . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract2Budget'] / $contractsCombined[$currentClient]['contract2Months']) /50 *3600) % 3600);
                                                         ?>
                                                     </td>
+                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
                                                 <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
                                                     <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                                         <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
@@ -290,6 +294,7 @@ require_once(__DIR__ . '/variables.php');
                                     });
                                 });
                                 </script>
+                            <!--ligne de l'onglet dédiée à Prometech afin qu'il apparaisse tout en bas-->
                             <tr>
                                 <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Prometech</td>
                                 <!--pour l'onglet année fiscale-->
@@ -319,6 +324,7 @@ require_once(__DIR__ . '/variables.php');
                                                     . gmdate(":i:s", round(($contractsCombined['Prometech']['contract1Budget'] / $contractsCombined['Prometech']['contract1Months']) /50 *3600) % 3600);
                                                 ?>
                                             </td>
+                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
                                         <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
                                         <?php elseif (check_in_range($contractsCombined['Prometech']['contract2Start'], $contractsCombined['Prometech']['contract2End'], $currentMonth)): ?>
                                             <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
@@ -327,6 +333,7 @@ require_once(__DIR__ . '/variables.php');
                                                     . gmdate(":i:s", round(($contractsCombined['Prometech']['contract2Budget'] / $contractsCombined['Prometech']['contract2Months']) /50 *3600) % 3600);
                                                 ?>
                                             </td>
+                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
                                         <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
                                             <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                                 <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
@@ -349,6 +356,7 @@ require_once(__DIR__ . '/variables.php');
                                                     . gmdate(":i:s", round(($contractsCombined['Prometech']['contract1Budget'] / $contractsCombined['Prometech']['contract1Months']) /50 *3600) % 3600);
                                                 ?>
                                             </td>
+                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
                                         <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
                                         <?php elseif (check_in_range($contractsCombined['Prometech']['contract2Start'], $contractsCombined['Prometech']['contract2End'], $currentMonth)): ?>
                                             <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
@@ -357,6 +365,7 @@ require_once(__DIR__ . '/variables.php');
                                                     . gmdate(":i:s", round(($contractsCombined['Prometech']['contract2Budget'] / $contractsCombined['Prometech']['contract2Months']) /50 *3600) % 3600);
                                                 ?>
                                             </td>
+                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
                                         <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
                                             <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                                 <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
@@ -416,10 +425,26 @@ require_once(__DIR__ . '/variables.php');
                                     <?php endif; ?>
                                 </td>
                             </tr>
+                            <!--ligne des totaux de l'onglet-->
                             <tr>
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Total</th>
-                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(0 / 50) . gmdate(":i:s", 0 /50 * 3600 % 3600);?></th>
+                                <!--affichage du total des temps budgetisés-->
+                                <?php if (isset(${'totalBudget' . $tabCounter})): //vérifie qu'un total a bien été calculé pour l'onglet ?>
+                                    <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                        <!--convertis en temps le total des budgets-->
+                                        <?php echo floor(
+                                            ${'totalBudget' . $tabCounter} / 50) 
+                                            . gmdate(":i:s", round(${'totalBudget' . $tabCounter} /50 *3600) % 3600);
+                                        ?>
+                                    </th>
+                                <?php else: // renvoie une erreur si aucun total calculé ?>
+                                    <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                        <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun total disponible</div> 
+                                    </th>
+                                <?php endif; ?>
+                                <!--total des temps d'infogérance-->
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
+                                <!--total des temps hors mission-->
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumHM' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumHM' . $tabCounter} % 3600);?></th>
                             </tr>
                         </table>
@@ -427,7 +452,8 @@ require_once(__DIR__ . '/variables.php');
                         <div class="alert alert-danger" role="alert">Aucune intervention enregistrée pour la période <strong><?php echo(fillPeriod($tabCounter))?></strong></div>
                     <?php endif; ?>
                 </div>
-                <?php $tabCounter++; ?>
+                <?php ${'totalBudget' . $tabCounter} = 0; // remet à zéro le compteur de budget total pour éviter qu'il se cumule à chaque itération de la boucle
+                $tabCounter++; ?>
             <?php endwhile; ?>
         </article></br>
     </div>

@@ -113,7 +113,7 @@ $totalBudget0 = (array_sum(array_column($contractsCombined, 'contract1Budget')) 
 
 // initialisation de tableaux de budgets totaux pour chaque mois
 for ($loopCounter = 1; $loopCounter <=12; $loopCounter++) {
-    ${'totalBudget' . $loopCounter} = [];
+    ${'totalBudget' . $loopCounter} = 0;
 } 
 
 // récupération des interventions dans la base SQL pour l'année sélectionnée en séparant par type d'intérvention
