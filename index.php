@@ -104,90 +104,30 @@ require_once(__DIR__ . '/variables.php');
                                         <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo $client_times['clients_nom'];?></td>
                                         <!--temps budgetisé-->
                                         <?php $currentClient = $client_times['clients_nom']; // on récupère le nom du client pour pouvoir le rechercher dans le tableau des budgets?>
-                                        <!--pour l'onglet année fiscale-->
-                                        <?php if ($tabCounter === 0): ?>
-                                            <?php if (isset($contractsCombined[$currentClient])): //vérifie si une ligne existe pour le client?>
-                                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                    <!--combine les deux budgets possibles sur une année et les convertis en temps-->
-                                                    <?php echo floor(
-                                                        ($contractsCombined[$currentClient]['contract1Budget'] + $contractsCombined[$currentClient]['contract2Budget']) / 50) 
-                                                        . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract1Budget'] + $contractsCombined[$currentClient]['contract2Budget']) /50 *3600) % 3600);
-                                                    ?>
-                                                </td>
-                                            <?php else: // renvoie une erreur si aucun budget renseigné ?>
-                                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <?php if ($tabCounter ===0): //l'onglet est l'année ?>
+                                                <?php if (isset(${'contractsCombined' . $tabCounter}[$currentClient])): //vérifie si une ligne existe pour le client ?>
+                                                    <!--combine les deux budgets possibles pour l'année et les convertis en temps-->
+                                                    <?php echo
+                                                        floor((${'contractsCombined' . $tabCounter}[$currentClient]['contract1Budget'] + ${'contractsCombined' . $tabCounter}[$currentClient]['contract2Budget']) / 50) 
+                                                        . gmdate(":i:s", round((${'contractsCombined' . $tabCounter}[$currentClient]['contract1Budget'] + ${'contractsCombined' . $tabCounter}[$currentClient]['contract2Budget']) /50 *3600) % 3600)
+                                                    ; ?>
+                                                <?php else: // renvoie une erreur si aucune ligne renseignée pour le client renseigné ?>
                                                     <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                                </td>
-                                            <?php endif; ?>
-                                        <!--pour les onglets octobre à décembre-->
-                                        <?php elseif ($tabCounter >=10 && $tabCounter <=12): ?>
-                                            <?php if (isset($contractsCombined[$currentClient])): //vérifie si une ligne existe pour le client ?>
-                                                <?php $currentMonth = $year1 . '-' . $tabCounter . '-05'; //crée la date de vérification du mois en cours (au 5 car certains contrats finissent au 1er) ?>
-                                                <!--vérifie si le 5 du mois en cours est comprise dans contrat 1-->
-                                                <?php if (check_in_range($contractsCombined[$currentClient]['contract1Start'], $contractsCombined[$currentClient]['contract1End'], $currentMonth)): ?>
-                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                        <?php echo floor(
-                                                            ($contractsCombined[$currentClient]['contract1Budget'] / $contractsCombined[$currentClient]['contract1Months']) / 50) 
-                                                            . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract1Budget'] / $contractsCombined[$currentClient]['contract1Months']) /50 *3600) % 3600);
-                                                        ?>
-                                                    </td>
-                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
-                                                <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
-                                                <?php elseif (check_in_range($contractsCombined[$currentClient]['contract2Start'], $contractsCombined[$currentClient]['contract2End'], $currentMonth)): ?>
-                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                        <?php echo floor(
-                                                            ($contractsCombined[$currentClient]['contract2Budget'] / $contractsCombined[$currentClient]['contract2Months']) / 50) 
-                                                            . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract2Budget'] / $contractsCombined[$currentClient]['contract2Months']) /50 *3600) % 3600);
-                                                        ?>
-                                                    </td>
-                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
-                                                <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
-                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                        <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                                    </td>
                                                 <?php endif; ?>
-                                            <?php else: //renvoie une erreur si aucun budget renseigné ?>
-                                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                                </td>
-                                            <?php endif; ?>
-                                        <!--pour les onglets janvier à septembre-->
-                                        <?php elseif ($tabCounter >=1 && $tabCounter <=9): ?>
-                                            <?php if (isset($contractsCombined[$currentClient])): //vérifie si une ligne existe pour le client ?>
-                                                <?php $currentMonth = $year2 . '-' . $tabCounter . '-05'; //crée la date de vérification du mois en cours (au 5 car certains contrats finissent au 1er) ?>
-                                                <!--vérifie si le 5 du mois en cours est comprise dans contrat 1-->
-                                                <?php if (check_in_range($contractsCombined[$currentClient]['contract1Start'], $contractsCombined[$currentClient]['contract1End'], $currentMonth)): ?>
-                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                        <?php echo floor(
-                                                            ($contractsCombined[$currentClient]['contract1Budget'] / $contractsCombined[$currentClient]['contract1Months']) / 50) 
-                                                            . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract1Budget'] / $contractsCombined[$currentClient]['contract1Months']) /50 *3600) % 3600);
-                                                        ?>
-                                                    </td>
-                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
-                                                <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
-                                                <?php elseif (check_in_range($contractsCombined[$currentClient]['contract2Start'], $contractsCombined[$currentClient]['contract2End'], $currentMonth)): ?>
-                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                        <?php echo floor(
-                                                            ($contractsCombined[$currentClient]['contract2Budget'] / $contractsCombined[$currentClient]['contract2Months']) / 50) 
-                                                            . gmdate(":i:s", round(($contractsCombined[$currentClient]['contract2Budget'] / $contractsCombined[$currentClient]['contract2Months']) /50 *3600) % 3600);
-                                                        ?>
-                                                    </td>
-                                                    <?php ${'totalBudget' . $tabCounter} += $contractsCombined[$currentClient]['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
-                                                <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
-                                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <?php else: //l'onglet est un mois ?>
+                                                <?php if (isset(${'contractsCombined' . $tabCounter}[$currentClient])): //vérifie si une ligne existe pour le client ?>
+                                                    <?php if (${'contractsCombined' . $tabCounter}[$currentClient]['budget'] !== 0): //vérifie si un budget existe pour le client ?>
+                                                        <!--ressort le temps budgetisé pour le client-->
+                                                        <?php echo ${'contractsCombined' . $tabCounter}[$currentClient]['time'] ?>
+                                                    <?php else: // renvoie une erreur si aucun budget renseigné ?>
                                                         <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                                    </td>
-                                                <?php endif; ?>
-                                            <?php else: //renvoie une erreur si aucun budget renseigné ?>
-                                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                                    <?php endif; ?>
+                                                <?php else: // renvoie une erreur si la ligne client n'existe pas ?>
                                                     <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                                </td>
+                                                <?php endif; ?>
                                             <?php endif; ?>
-                                        <?php else: //renvoie une erreur si le tabCounter ne correspond pas à l'année ou aux mois?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Onglet invalide</div> 
-                                                </td>
-                                        <?php endif; ?>
+                                        </td>
                                         <!--temps d'infogérance-->
                                         <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                             <!--conversion des secondes en heures:minutes:secondes-->
@@ -297,92 +237,37 @@ require_once(__DIR__ . '/variables.php');
                             <!--ligne de l'onglet dédiée à Prometech afin qu'il apparaisse tout en bas-->
                             <tr>
                                 <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Prometech</td>
-                                <!--pour l'onglet année fiscale-->
-                                <?php if ($tabCounter === 0): ?>
-                                    <?php if (isset($contractsCombined['Prometech'])): //vérifie si une ligne existe pour le client?>
-                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                            <!--combine les deux budgets possibles sur une année et les convertis en temps-->
-                                            <?php echo floor(
-                                                ($contractsCombined['Prometech']['contract1Budget'] + $contractsCombined['Prometech']['contract2Budget']) / 50) 
-                                                . gmdate(":i:s", round(($contractsCombined['Prometech']['contract1Budget'] + $contractsCombined['Prometech']['contract2Budget']) /50 *3600) % 3600);
-                                            ?>
+                                <!--temps budgetisé-->
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <?php if ($tabCounter ===0): //l'onglet est l'année ?>
+                                                <?php if (isset(${'contractsCombined' . $tabCounter}['Prometech'])): //vérifie si une ligne existe pour le client ?>
+                                                    <!--combine les deux budgets possibles pour l'année et les convertis en temps-->
+                                                    <?php echo
+                                                        floor((${'contractsCombined' . $tabCounter}['Prometech']['contract1Budget'] + ${'contractsCombined' . $tabCounter}['Prometech']['contract2Budget']) / 50) 
+                                                        . gmdate(":i:s", round((${'contractsCombined' . $tabCounter}['Prometech']['contract1Budget'] + ${'contractsCombined' . $tabCounter}['Prometech']['contract2Budget']) /50 *3600) % 3600)
+                                                    ; ?>
+                                                <?php else: // renvoie une erreur si aucune ligne renseignée pour le client renseigné ?>
+                                                    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
+                                                <?php endif; ?>
+                                            <?php else: //l'onglet est un mois ?>
+                                                <?php if (isset(${'contractsCombined' . $tabCounter}['Prometech'])): //vérifie si une ligne existe pour le client ?>
+                                                    <?php if (${'contractsCombined' . $tabCounter}['Prometech']['budget'] !== 0): //vérifie si un budget existe pour le client ?>
+                                                        <!--ressort le temps budgetisé pour le client-->
+                                                        <?php echo ${'contractsCombined' . $tabCounter}['Prometech']['time'] ?>
+                                                    <?php else: // renvoie une erreur si aucun budget renseigné ?>
+                                                        <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
+                                                    <?php endif; ?>
+                                                <?php else: // renvoie une erreur si la ligne client n'existe pas ?>
+                                                    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
+                                                <?php endif; ?>
+                                            <?php endif; ?>
                                         </td>
-                                    <?php else: // renvoie une erreur si aucun budget renseigné ?>
-                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                            <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                        </td>
-                                    <?php endif; ?>
-                                <!--pour les onglets octobre à décembre-->
-                                <?php elseif ($tabCounter >=10 && $tabCounter <=12): ?>
-                                    <?php if (isset($contractsCombined['Prometech'])): //vérifie si une ligne existe pour le client ?>
-                                        <?php $currentMonth = $year1 . '-' . $tabCounter . '-05'; //crée la date de vérification du mois en cours (au 5 car certains contrats finissent au 1er) ?>
-                                        <!--vérifie si le 5 du mois en cours est comprise dans contrat 1-->
-                                        <?php if (check_in_range($contractsCombined['Prometech']['contract1Start'], $contractsCombined['Prometech']['contract1End'], $currentMonth)): ?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                <?php echo floor(
-                                                    ($contractsCombined['Prometech']['contract1Budget'] / $contractsCombined['Prometech']['contract1Months']) / 50) 
-                                                    . gmdate(":i:s", round(($contractsCombined['Prometech']['contract1Budget'] / $contractsCombined['Prometech']['contract1Months']) /50 *3600) % 3600);
-                                                ?>
-                                            </td>
-                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
-                                        <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
-                                        <?php elseif (check_in_range($contractsCombined['Prometech']['contract2Start'], $contractsCombined['Prometech']['contract2End'], $currentMonth)): ?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                <?php echo floor(
-                                                    ($contractsCombined['Prometech']['contract2Budget'] / $contractsCombined['Prometech']['contract2Months']) / 50) 
-                                                    . gmdate(":i:s", round(($contractsCombined['Prometech']['contract2Budget'] / $contractsCombined['Prometech']['contract2Months']) /50 *3600) % 3600);
-                                                ?>
-                                            </td>
-                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
-                                        <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                            </td>
-                                        <?php endif; ?>
-                                    <?php else: //renvoie une erreur si aucun budget renseigné ?>
-                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                            <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                        </td>
-                                    <?php endif; ?>
-                                <!--pour les onglets janvier à septembre-->
-                                <?php elseif ($tabCounter >=1 && $tabCounter <=9): ?>
-                                    <?php if (isset($contractsCombined['Prometech'])): //vérifie si une ligne existe pour le client ?>
-                                        <?php $currentMonth = $year2 . '-' . $tabCounter . '-05'; //crée la date de vérification du mois en cours (au 5 car certains contrats finissent au 1er) ?>
-                                        <!--vérifie si le 5 du mois en cours est comprise dans contrat 1-->
-                                        <?php if (check_in_range($contractsCombined['Prometech']['contract1Start'], $contractsCombined['Prometech']['contract1End'], $currentMonth)): ?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                <?php echo floor(
-                                                    ($contractsCombined['Prometech']['contract1Budget'] / $contractsCombined['Prometech']['contract1Months']) / 50) 
-                                                    . gmdate(":i:s", round(($contractsCombined['Prometech']['contract1Budget'] / $contractsCombined['Prometech']['contract1Months']) /50 *3600) % 3600);
-                                                ?>
-                                            </td>
-                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract1Budget']; //ajoute le budget 1 mensualisé de l'entreprise au total du mois?>
-                                        <!--vérifie si le 5 du mois en cours est comprise dans contrat 2-->
-                                        <?php elseif (check_in_range($contractsCombined['Prometech']['contract2Start'], $contractsCombined['Prometech']['contract2End'], $currentMonth)): ?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                <?php echo floor(
-                                                    ($contractsCombined['Prometech']['contract2Budget'] / $contractsCombined['Prometech']['contract2Months']) / 50) 
-                                                    . gmdate(":i:s", round(($contractsCombined['Prometech']['contract2Budget'] / $contractsCombined['Prometech']['contract2Months']) /50 *3600) % 3600);
-                                                ?>
-                                            </td>
-                                            <?php ${'totalBudget' . $tabCounter} += $contractsCombined['Prometech']['contract2Budget']; //ajoute le budget 2 mensualisé de l'entreprise au total du mois?>
-                                        <?php else: //renvoie une erreur si le budget qui correspondrait à la date est vide ?>
-                                            <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                                <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                            </td>
-                                        <?php endif; ?>
-                                    <?php else: //renvoie une erreur si aucun budget renseigné ?>
-                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                            <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                        </td>
-                                    <?php endif; ?>
-                                <?php else: //renvoie une erreur si le tabCounter ne correspond pas à l'année ou aux mois?>
-                                    <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                            <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Onglet invalide</div> 
-                                        </td>
-                                <?php endif; ?>
-                                <!--conversion des secondes en heures:minutes:secondes ; pas de bouton de détail car doit être 0:00:00-->
-                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_infogerance'] % 3600);?></td>
+                                <!--temps infogérance-->
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                    <!--conversion des secondes en heures:minutes:secondes ; pas de bouton de détail car doit être 0:00:00-->
+                                    <?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_infogerance'] % 3600);?>
+                                </td>
+                                <!--temps hors mission-->
                                 <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                     <?php echo floor(${'sum' . $tabCounter}['Prometech']['temps_hm'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}['Prometech']['temps_hm'] % 3600);?>
                                     <!--bouton pour afficher le sous-tableau de détail des temps hors mission de Prometech-->
@@ -429,19 +314,13 @@ require_once(__DIR__ . '/variables.php');
                             <tr>
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Total</th>
                                 <!--affichage du total des temps budgetisés-->
-                                <?php if (isset(${'totalBudget' . $tabCounter})): //vérifie qu'un total a bien été calculé pour l'onglet ?>
-                                    <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
-                                        <!--convertis en temps le total des budgets-->
-                                        <?php echo floor(
-                                            ${'totalBudget' . $tabCounter} / 50) 
-                                            . gmdate(":i:s", round(${'totalBudget' . $tabCounter} /50 *3600) % 3600);
-                                        ?>
-                                    </th>
-                                <?php else: // renvoie une erreur si aucun total calculé ?>
-                                    <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                    <?php if (isset(${'totalTime' . $tabCounter})): //vérifie qu'un total a bien été calculé pour l'onglet ?>
+                                        <?php echo ${'totalTime' . $tabCounter}; ?>
+                                    <?php else: // renvoie une erreur si aucun total calculé ?>
                                         <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun total disponible</div> 
-                                    </th>
-                                <?php endif; ?>
+                                    <?php endif; ?>
+                                </th>
                                 <!--total des temps d'infogérance-->
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
                                 <!--total des temps hors mission-->
@@ -452,8 +331,7 @@ require_once(__DIR__ . '/variables.php');
                         <div class="alert alert-danger" role="alert">Aucune intervention enregistrée pour la période <strong><?php echo(fillPeriod($tabCounter))?></strong></div>
                     <?php endif; ?>
                 </div>
-                <?php ${'totalBudget' . $tabCounter} = 0; // remet à zéro le compteur de budget total pour éviter qu'il se cumule à chaque itération de la boucle
-                $tabCounter++; ?>
+                <?php $tabCounter++; ?>
             <?php endwhile; ?>
         </article></br>
     </div>
