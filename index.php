@@ -68,11 +68,13 @@ require_once(__DIR__ . '/variables.php');
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps budgétisé</th>
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps infogérance réel</th>
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps hors mission</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Boni/Mali infogérance</th>
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Taux horaire réel</th>
                             </tr>
                             <?php $clientCounter = 1; //activation du compteur pour rendre unique chaque bouton de sous-tableau de détail de temps ?>
                             <?php foreach (${'clientList' . $tabCounter} as $client): //boucle pour générer une ligne de temps pour chaque société ?>
                                 <!--exclusion de Prometech pour pouvoir le mettre en fin de tableau, ainsi que des clients sans temps renseigné pour le mois-->
-                                <?php if (($client['clients_nom'] != 'Prometech') && array_key_exists($client['clients_nom'], ${'sum' . $tabCounter})): ?>
+                                <?php if (($client['clients_nom'] != 'Prometech') && ($tabCounter !== 0 ? array_key_exists($client['clients_nom'], ${'sum' . $tabCounter}): true)): ?>
                                     <?php $currentClient = $client['clients_nom']; // on récupère le nom du client pour pouvoir le rechercher dans les tableaux externes?>
                                     <!--script pour les boutons permettant d'afficher le sous-tableau de détail de chaque temps-->
                                     <!--nomenclature boutons : Tab(numéro de l'onglet en cours)/Wrapper ou Opener A ou B (A=infogerance, B=hors mission)/numéro du client en cours-->
@@ -117,14 +119,11 @@ require_once(__DIR__ . '/variables.php');
                                                     <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
                                                 <?php endif; ?>
                                             <?php else: //l'onglet est un mois ?>
-                                                <?php if (isset(${'contractsCombined' . $tabCounter}[$currentClient])): //vérifie si une ligne existe pour le client ?>
-                                                    <?php if (${'contractsCombined' . $tabCounter}[$currentClient]['budget'] !== 0): //vérifie si un budget existe pour le client ?>
-                                                        <!--ressort le temps budgetisé pour le client-->
-                                                        <?php echo ${'contractsCombined' . $tabCounter}[$currentClient]['time'] ?>
-                                                    <?php else: // renvoie une erreur si aucun budget renseigné ?>
-                                                        <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
-                                                    <?php endif; ?>
-                                                <?php else: // renvoie une erreur si la ligne client n'existe pas ?>
+                                                <!--vérifie si la ligne existe bien et que le budget est supérieur à 0-->
+                                                <?php if (isset(${'contractsCombined' . $tabCounter}[$currentClient]) && (${'contractsCombined' . $tabCounter}[$currentClient]['budget'] !== 0)):?>
+                                                    <!--ressort le temps budgetisé pour le client-->
+                                                    <?php echo ${'contractsCombined' . $tabCounter}[$currentClient]['time'] ?>
+                                                <?php else: // renvoie une erreur si aucun budget renseigné ?>
                                                     <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Aucun budget renseigné</div> 
                                                 <?php endif; ?>
                                             <?php endif; ?>
@@ -215,6 +214,61 @@ require_once(__DIR__ . '/variables.php');
                                                 </div>
                                             <?php endif; ?>
                                         </td>
+                                        <!--Boni/Mali infogérance-->
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                            <?php if ($tabCounter ===0): //l'onglet est l'année ?>
+                                                <!--vérifie si une ligne de budget et un temps d'infogérance existe pour le client-->
+                                                <?php if ((isset(${'contractsCombined' . $tabCounter}[$currentClient]) && (isset((${'sum' . $tabCounter}[$currentClient]['temps_infogerance']))))): ?>
+                                                    <!--calcule la différence entre les deux valeurs -->
+                                                    <?php $currentDiff = (((${'contractsCombined' . $tabCounter}[$currentClient]['contract1Budget'] 
+                                                        + ${'contractsCombined' . $tabCounter}[$currentClient]['contract2Budget']) /50 *3600)
+                                                        - ${'sum' . $tabCounter}[$currentClient]['temps_infogerance']); ?>
+                                                    <?php if ($currentDiff >= 0): ?>
+                                                        <?php echo 
+                                                            floor ($currentDiff / 3600) . gmdate(":i:s", round($currentDiff) % 3600)
+                                                        ; ?>
+                                                    <?php else: ?>
+                                                        <?php echo (
+                                                            '-' .
+                                                            floor (
+                                                            ((${'sum' . $tabCounter}[$currentClient]['temps_infogerance']) /3600)
+                                                            - ((${'contractsCombined' . $tabCounter}[$currentClient]['contract1Budget'] 
+                                                            + ${'contractsCombined' . $tabCounter}[$currentClient]['contract2Budget']) /50)) 
+                                                            . gmdate(":i:s", round((${'sum' . $tabCounter}[$currentClient]['temps_infogerance'])
+                                                            - ((${'contractsCombined' . $tabCounter}[$currentClient]['contract1Budget'] 
+                                                            + ${'contractsCombined' . $tabCounter}[$currentClient]['contract2Budget']) /50 *3600)) % 3600)
+                                                        ); ?>
+                                                    <?php endif; ?>
+                                                <?php else: // renvoie une erreur si aucun budget ou contrat renseigné pour le client ?>
+                                                    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Calcul impossible</div> 
+                                                <?php endif; ?>
+                                            <?php else: //l'onglet est un mois ?>
+                                                <!--vérifie si une ligne de budget et un temps d'infogérance existe pour le client-->
+                                                <?php if (isset(${'contractsCombined' . $tabCounter}[$currentClient]) && (${'contractsCombined' . $tabCounter}[$currentClient]['budget'] !== 0) && isset((${'sum' . $tabCounter}[$currentClient]['temps_infogerance']))): ?>
+                                                    <!--calcule la différence entre les deux valeurs -->
+                                                    <?php $currentDiff = ((${'contractsCombined' . $tabCounter}[$currentClient]['budget'] /50 *3600)
+                                                        - (${'sum' . $tabCounter}[$currentClient]['temps_infogerance'])); ?>
+                                                    <?php if ($currentDiff >= 0): ?>
+                                                        <?php echo 
+                                                            floor ($currentDiff / 3600) . gmdate(":i:s", round($currentDiff) % 3600)
+                                                        ; ?>
+                                                    <?php else: ?>
+                                                        <?php echo (
+                                                            '-' .
+                                                            floor (
+                                                            (${'sum' . $tabCounter}[$currentClient]['temps_infogerance'] /3600)
+                                                            - (${'contractsCombined' . $tabCounter}[$currentClient]['budget'] /50)) 
+                                                            . gmdate(":i:s", round(${'sum' . $tabCounter}[$currentClient]['temps_infogerance'])
+                                                            - round(${'contractsCombined' . $tabCounter}[$currentClient]['budget'] /50 *3600) % 3600)
+                                                            ); ?>
+                                                    <?php endif; ?>
+                                                <?php else: // renvoie une erreur si la ligne client n'existe pas ?>
+                                                    <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Calcul impossible</div> 
+                                                <?php endif; ?>
+                                            <?php endif; ?>    
+                                        </td>
+                                        <!--Taux horaire réel-->
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Coming soon</td>
                                     </tr>
                                     <?php $clientCounter++; ?>
                                 <?php endif; ?>
@@ -310,6 +364,61 @@ require_once(__DIR__ . '/variables.php');
                                                 </div>
                                     <?php endif; ?>
                                 </td>
+                                <!--Boni/Mali infogérance-->
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                    <?php if ($tabCounter ===0): //l'onglet est l'année ?>
+                                        <!--vérifie si une ligne de budget et un temps d'infogérance existe pour le client-->
+                                        <?php if ((isset(${'contractsCombined' . $tabCounter}['Prometech']) && (isset((${'sum' . $tabCounter}['Prometech']['temps_infogerance']))))): ?>
+                                            <!--calcule la différence entre les deux valeurs -->
+                                            <?php $currentDiff = (((${'contractsCombined' . $tabCounter}['Prometech']['contract1Budget'] 
+                                                + ${'contractsCombined' . $tabCounter}['Prometech']['contract2Budget']) /50 *3600)
+                                                - ${'sum' . $tabCounter}['Prometech']['temps_infogerance']); ?>
+                                            <?php if ($currentDiff >= 0): ?>
+                                                <?php echo 
+                                                    floor ($currentDiff / 3600) . gmdate(":i:s", round($currentDiff) % 3600)
+                                                ; ?>
+                                            <?php else: ?>
+                                                <?php echo (
+                                                    '-' .
+                                                    floor (
+                                                    ((${'sum' . $tabCounter}['Prometech']['temps_infogerance']) /3600)
+                                                    - ((${'contractsCombined' . $tabCounter}['Prometech']['contract1Budget'] 
+                                                    + ${'contractsCombined' . $tabCounter}['Prometech']['contract2Budget']) /50)) 
+                                                    . gmdate(":i:s", round((${'sum' . $tabCounter}['Prometech']['temps_infogerance'])
+                                                    - ((${'contractsCombined' . $tabCounter}['Prometech']['contract1Budget'] 
+                                                    + ${'contractsCombined' . $tabCounter}['Prometech']['contract2Budget']) /50 *3600)) % 3600)
+                                                ); ?>
+                                            <?php endif; ?>
+                                        <?php else: // renvoie une erreur si aucun budget ou contrat renseigné pour le client ?>
+                                            <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Calcul impossible</div> 
+                                        <?php endif; ?>
+                                    <?php else: //l'onglet est un mois ?>
+                                        <!--vérifie si une ligne de budget et un temps d'infogérance existe pour le client-->
+                                        <?php if (isset(${'contractsCombined' . $tabCounter}['Prometech']) && (${'contractsCombined' . $tabCounter}['Prometech']['budget'] !== 0) && isset((${'sum' . $tabCounter}[$currentClient]['temps_infogerance']))): ?>
+                                            <!--calcule la différence entre les deux valeurs -->
+                                            <?php $currentDiff = ((${'contractsCombined' . $tabCounter}[$currentClient]['budget'] /50 *3600)
+                                                - (${'sum' . $tabCounter}['Prometech']['temps_infogerance'])); ?>
+                                            <?php if ($currentDiff >= 0): ?>
+                                                <?php echo 
+                                                    floor ($currentDiff / 3600) . gmdate(":i:s", round($currentDiff) % 3600)
+                                                ; ?>
+                                            <?php else: ?>
+                                                <?php echo (
+                                                    '-' .
+                                                    floor (
+                                                    (${'sum' . $tabCounter}['Prometech']['temps_infogerance'] /3600)
+                                                    - (${'contractsCombined' . $tabCounter}['Prometech']['budget'] /50)) 
+                                                    . gmdate(":i:s", round(${'sum' . $tabCounter}['Prometech']['temps_infogerance'])
+                                                    - round(${'contractsCombined' . $tabCounter}['Prometech']['budget'] /50 *3600) % 3600)
+                                                    ); ?>
+                                            <?php endif; ?>
+                                        <?php else: // renvoie une erreur si la ligne client n'existe pas ?>
+                                            <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Calcul impossible</div> 
+                                        <?php endif; ?>
+                                    <?php endif; ?>    
+                                </td>
+                                <!--Taux horaire réel-->
+                                <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Coming soon</td>
                             </tr>
                             <!--ligne des totaux de l'onglet-->
                             <tr>
@@ -326,6 +435,33 @@ require_once(__DIR__ . '/variables.php');
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumIn' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumIn' . $tabCounter} % 3600);?></th>
                                 <!--total des temps hors mission-->
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo floor(${'TotalSumHM' . $tabCounter} / 3600) . gmdate(":i:s", ${'TotalSumHM' . $tabCounter} % 3600);?></th>
+                                <!--Boni/Mali infogérance-->
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
+                                    <!--vérifie au'un budget total et un temps d'infogérance total existe bien-->
+                                    <?php if ((isset(${'totalBudget' . $tabCounter}) && (isset((${'TotalSumIn' . $tabCounter}))))): ?>
+                                        <!--calcule la différence entre les deux valeurs -->
+                                        <?php $currentDiff = ((${'totalBudget' . $tabCounter} /50 *3600)
+                                            - ${'TotalSumIn' . $tabCounter}); ?>
+                                        <?php if ($currentDiff >= 0): ?>
+                                            <?php echo 
+                                                floor ($currentDiff / 3600) . gmdate(":i:s", round($currentDiff) % 3600)
+                                            ; ?>
+                                        <?php else: ?>
+                                            <?php echo (
+                                                '-' .
+                                                floor (
+                                                ((${'TotalSumIn' . $tabCounter}) /3600)
+                                                - (${'totalBudget' . $tabCounter} /50)) 
+                                                . gmdate(":i:s", round((${'TotalSumIn' . $tabCounter})
+                                                - (${'totalBudget' . $tabCounter} /50 *3600)) % 3600)
+                                            ); ?>
+                                        <?php endif; ?>
+                                    <?php else: // renvoie une erreur si aucun budget ou contrat renseigné pour le client ?>
+                                        <div class="alert alert-danger" role="alert"><i class="fa-solid fa-triangle-exclamation"></i> Calcul impossible</div> 
+                                    <?php endif; ?>
+                                </th>
+                                <!--Taux horaire réel-->
+                                <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Coming soon</th>
                             </tr>
                         </table>
                     <?php else: // retour d'erreur si aucun temps enregistré ?>
