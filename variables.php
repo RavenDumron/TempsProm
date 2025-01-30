@@ -27,146 +27,6 @@ $year2 = ($year1 + 1);
 $yearStart = $year1 . '-10-1';
 $yearEnd = $year2 . '-9-30';
 
-/////////////////////////////////////////////////////////////////////
-//------début de l'extraction des budgets et temps budgetisés------//
-/////////////////////////////////////////////////////////////////////
-
-// récupération des contrats dans la base SQL pour l'année sélectionnée
-$SQLcontracts = $mysqlClient->prepare(
-    "SELECT 
-        c.clients_nom, 
-        cc.clients_contrat_ouverture,
-        cc.clients_contrat_fermeture,
-        cc.clients_contrat_prix_vente_ht
-    FROM clients_contrat cc 
-    INNER JOIN clients c 
-    ON cc.clients_id = c.clients_id 
-    WHERE cc.clients_contrat_fermeture >= :yearStart AND cc.clients_contrat_ouverture <= :yearEnd
-    ORDER BY c.clients_nom ASC"
-    );
-
-$SQLcontracts ->execute([
-    'yearStart' => $yearStart,
-    'yearEnd' => $yearEnd,
-]);
-
-$contracts = $SQLcontracts->fetchAll();
-
-// initialisation du tableau pour recueillir les contrats rassemblés par entreprise pour l'année
-$contractsCombined0 = [];
-
-// compilation des contracts avec une seule entrée par entreprise, qui comprend à la fois le compte de mois et le budget pour contract 1 et contrat 2
-foreach ($contracts as $contract) {
-    $clientName = $contract['clients_nom'];
-    
-    // Vérifie si une ligne existe déjà pour l'entreprise, sinon l'initialise
-    if (!isset($contractsCombined0[$clientName])) {
-        $contractsCombined0[$clientName] = [
-            'clients_nom' => $clientName,
-            'contract1Budget' => null,
-            'contract1Months' => null,
-            'contract1Start' => null,            
-            'contract1End' => null,
-            'contract2Budget' => null,
-            'contract2Months' => null,
-            'contract2Start' => null,
-            'contract2End' => null,
-        ];
-    }
-
-    // remplissage des contrats : 
-    // calcule combien de mois occupe chaque contrat
-    // recalcule le budget par mois en proportion de cela
-    // assigne une date de début ou de fin de contrat pour pouvoir déterminer quelle valeur prendre en compte selon l'onglet
-    if ($contract['clients_contrat_ouverture'] > $yearStart) {
-        // si le contrat démarre après le début de l'année fiscale, on l'assigne à contrat 2
-        $contractsCombined0[$clientName]['contract2Months'] = calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $yearEnd);
-        $contractsCombined0[$clientName]['contract2Budget'] = ($contract['clients_contrat_prix_vente_ht'] /12 * $contractsCombined0[$clientName]['contract2Months']);
-        $contractsCombined0[$clientName]['contract2Start'] = $contract['clients_contrat_ouverture'];
-        $contractsCombined0[$clientName]['contract2End'] = $contract['clients_contrat_fermeture'];
-    } elseif ($contract['clients_contrat_fermeture'] < $yearEnd) {
-        // si le contrat finit avant la fin de l'année fiscale, on l'assigne à contrat 1
-        $contractsCombined0[$clientName]['contract1Months'] = calculateMonthsRoundedUp($yearStart, $contract['clients_contrat_fermeture']);
-        $contractsCombined0[$clientName]['contract1Budget'] = ($contract['clients_contrat_prix_vente_ht'] /12 * $contractsCombined0[$clientName]['contract1Months']);
-        $contractsCombined0[$clientName]['contract1Start'] = $contract['clients_contrat_ouverture'];
-        $contractsCombined0[$clientName]['contract1End'] = $contract['clients_contrat_fermeture'];
-    } else {
-        // si le contrat englobe toute l'année fiscale, on l'assigne à contrat 1 par défaut
-        if (is_null($contractsCombined0[$clientName]['contract1Budget'])) {
-            $contractsCombined0[$clientName]['contract1Months'] = calculateMonthsRoundedUp($yearStart, $contract['clients_contrat_fermeture']);
-            $contractsCombined0[$clientName]['contract1Budget'] = ($contract['clients_contrat_prix_vente_ht'] /12 * $contractsCombined0[$clientName]['contract1Months']);
-            $contractsCombined0[$clientName]['contract1Start'] = $contract['clients_contrat_ouverture'];
-            $contractsCombined0[$clientName]['contract1End'] = $contract['clients_contrat_fermeture'];
-        } else {
-            // on assigne à contrat 2 si contrat 1 est déjà rempli
-            $contractsCombined0[$clientName]['contract2Months'] = calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $yearEnd);
-            $contractsCombined0[$clientName]['contract2Budget'] = ($contract['clients_contrat_prix_vente_ht'] /12 * $contractsCombined0[$clientName]['contract2Months']);
-            $contractsCombined0[$clientName]['contract2Start'] = $contract['clients_contrat_ouverture'];
-            $contractsCombined0[$clientName]['contract2End'] = $contract['clients_contrat_fermeture'];
-        }
-    }
-}
-
-// calcule la somme de tous les budgets
-$totalBudget0 = (array_sum(array_column($contractsCombined0, 'contract1Budget')) + array_sum(array_column($contractsCombined0, 'contract2Budget')));
-
-// transforme cette somme en temps
-$totalTime0 = floor($totalBudget0 / 50) . gmdate(":i:s", round($totalBudget0 /50 *3600) % 3600);
-
-// initialisation de tableaux de budgets totaux pour chaque mois
-for ($loopCounter = 1; $loopCounter <=12; $loopCounter++) {
-    ${'contractsCombined' . $loopCounter} = [];
-
-    // remplit le tableau de budget qui vient d'être initialisé avec les contrats courants pour ce mois-là
-    foreach ($contractsCombined0 as $clientContract) {
-        $clientName = $clientContract['clients_nom'];
-    
-        // Vérifie si une ligne existe déjà pour l'entreprise, sinon l'initialise
-        if (!isset(${'contractsCombined' . $loopCounter}[$clientName])) {
-            ${'contractsCombined' . $loopCounter}[$clientName] = [
-                'client' => $clientName,
-                'budget' => 0,
-                'time' => null,
-            ];
-        }
-
-        //crée la date de vérification du mois en cours (au 5 car certains contrats finissent au 1er)
-        if ($loopCounter <=9) {
-            $currentMonth = $year2 . '-0' . $loopCounter . '-05';
-        }
-        else {
-            $currentMonth = $year1 . '-' . $loopCounter . '-05';
-        }
-        // Vérifie si le mois est couvert par le contrat 1
-        if (check_in_range($clientContract['contract1Start'], $clientContract['contract1End'], $currentMonth)) {
-            ${'contractsCombined' . $loopCounter}[$clientName] = [
-                'client' => $clientContract['clients_nom'],
-                // Calcul du budget mensuel 
-                'budget' => ($clientContract['contract1Budget'] / $clientContract['contract1Months']),
-                // Conversion du budget en temps
-                'time' => floor(($clientContract['contract1Budget'] / $clientContract['contract1Months']) / 50) .
-                         gmdate(":i:s", round(($clientContract['contract1Budget'] / $clientContract['contract1Months']) / 50 * 3600) % 3600)
-            ];
-        }
-        // Vérifie si le mois est couvert par le contrat 2
-        elseif (check_in_range($clientContract['contract2Start'], $clientContract['contract2End'], $currentMonth)) {
-            ${'contractsCombined' . $loopCounter}[$clientName] = [
-                'client' => $clientContract['clients_nom'],
-                // Calcul du budget mensuel 
-                'budget' => ($clientContract['contract2Budget'] / $clientContract['contract2Months']),
-                // Conversion du budget en temps
-                'time' => floor(($clientContract['contract2Budget'] / $clientContract['contract2Months']) / 50) .
-                         gmdate(":i:s", round(($clientContract['contract2Budget'] / $clientContract['contract2Months']) / 50 * 3600) % 3600)
-            ];
-        }
-    }
-    // calcule la somme de tous les budgets
-    ${'totalBudget' . $loopCounter} = array_sum(array_column(${'contractsCombined' . $loopCounter}, 'budget'));
-
-    // transforme cette somme en temps
-    ${'totalTime' . $loopCounter} = floor(${'totalBudget' . $loopCounter} / 50) . gmdate(":i:s", round(${'totalBudget' . $loopCounter} /50 *3600) % 3600);
-} 
-
 //////////////////////////////////////////////////////////////
 //------début de l'extraction des temps d'intervention------//
 //////////////////////////////////////////////////////////////
@@ -250,21 +110,13 @@ foreach ($extract0 as $intervention) {
     }
 }
 
-// initialisation de tableaux pour cumuler les temps de chaque client, où 0=année sélectionnée, 1=janvier, 2=février, etc. 
-for ($loopCounter = 0; $loopCounter <=12; $loopCounter++) {
-    ${'sum' . $loopCounter} = [];
-} 
+// cumule les temps de chaque client dans $sum0-12 pour afficher un seul temps d'infogérance et hors mission par client
+for ($sumCounter = 0; $sumCounter <=12; $sumCounter++) {
+    // initialisation de tableaux pour cumuler les temps de chaque client, où 0=année sélectionnée, 1=janvier, 2=février, etc. 
+    ${'sum' . $sumCounter} = [];
 
-// compteur pour la boucle de cumul des temps clients
-$sumCounter = 0;
-
-        
-// cumule les temps de chaque client dans $sum# pour afficher un seul temps d'infogérance et hors mission par client
-// incrémente en commençant par le tableau de l'année, puis de chaque mois 
-// /!\ Attention, l'ordre des mois est celui calendaire, donc 1-9 sont année n+1, et 10-12 année n
-// fait également la somme totale du temps d'infogérance et HM dans $TotalSumIn# et $TotalSumHM#
-while ($sumCounter < 13)
-{
+    // incrémente en commençant par le tableau de l'année, puis de chaque mois 
+    // /!\ Attention, l'ordre des mois est celui calendaire, donc 1-9 sont année n+1, et 10-12 année n
     foreach(${'extract' . $sumCounter} as $currentSum){
         if(array_key_exists($currentSum['clients_nom'],${'sum' . $sumCounter})){
             ${'sum' . $sumCounter}[$currentSum['clients_nom']]['temps_infogerance'] += $currentSum['temps_infogerance'];
@@ -275,13 +127,184 @@ while ($sumCounter < 13)
             ${'sum' . $sumCounter}[$currentSum['clients_nom']]  = $currentSum;
         }
     }
+    // écrase le temps d'infogérance Prometech pour le mettre à 0
     ${'sum' . $sumCounter}['Prometech']['temps_infogerance'] = '0';
+    // fait également la somme totale du temps d'infogérance et HM dans $TotalSumIn# et $TotalSumHM#
     ${'TotalSumIn' . $sumCounter} = array_sum(array_column(${'sum' . $sumCounter}, 'temps_infogerance'));
     ${'TotalSumHM' . $sumCounter} = array_sum(array_column(${'sum' . $sumCounter}, 'temps_hm'));
-    $sumCounter++;
 }
 
-//Compteur pour les onglets, 0 = la période annuelle sélectionnée, 1-12 étant le mois dans l'ordre calendaire
-//Est incrémenté directement par les onglets
-$tabCounter = 0;
+/////////////////////////////////////////////////////////////////////
+//------début de l'extraction des budgets et temps budgetisés------//
+/////////////////////////////////////////////////////////////////////
 
+// récupération des contrats dans la base SQL pour l'année sélectionnée
+$SQLcontracts = $mysqlClient->prepare(
+    "SELECT 
+        c.clients_nom, 
+        cc.clients_contrat_ouverture,
+        cc.clients_contrat_fermeture,
+        cc.clients_contrat_prix_vente_ht
+    FROM clients_contrat cc 
+    INNER JOIN clients c 
+    ON cc.clients_id = c.clients_id 
+    WHERE cc.clients_contrat_fermeture >= :yearStart AND cc.clients_contrat_ouverture <= :yearEnd
+    ORDER BY c.clients_nom ASC"
+    );
+
+$SQLcontracts ->execute([
+    'yearStart' => $yearStart,
+    'yearEnd' => $yearEnd,
+]);
+
+$contracts = $SQLcontracts->fetchAll();
+
+// initialisation du tableau pour recueillir les contrats rassemblés par entreprise pour l'année
+$contractsCombined0 = [];
+
+// compilation des contracts avec une seule entrée par entreprise, qui comprend à la fois le compte de mois et le budget pour contract 1 et contrat 2
+foreach ($contracts as $contract) {
+    $clientName = $contract['clients_nom'];
+    
+    // Vérifie si une ligne existe déjà pour l'entreprise, sinon l'initialise
+    if (!isset($contractsCombined0[$clientName])) {
+        $contractsCombined0[$clientName] = [
+            'clients_nom' => $clientName,
+            'contract1Budget' => null,
+            'contract1Months' => null,
+            'contract1Start' => null,            
+            'contract1End' => null,
+            'contract2Budget' => null,
+            'contract2Months' => null,
+            'contract2Start' => null,
+            'contract2End' => null,
+        ];
+    }
+
+    // remplissage des contrats : 
+    // calcule combien de mois occupe chaque contrat
+    // recalcule le budget par mois en proportion de cela
+    // assigne une date de début ou de fin de contrat pour pouvoir déterminer quelle valeur prendre en compte selon l'onglet
+    if ($contract['clients_contrat_ouverture'] > $yearStart) {
+        // si le contrat démarre après le début de l'année fiscale, on l'assigne à contrat 2
+        $contractsCombined0[$clientName]['contract2Months'] = calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $yearEnd);
+        $contractsCombined0[$clientName]['contract2Budget'] = ($contract['clients_contrat_prix_vente_ht'] / calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $contract['clients_contrat_fermeture']) * $contractsCombined0[$clientName]['contract2Months']);
+        $contractsCombined0[$clientName]['contract2Start'] = $contract['clients_contrat_ouverture'];
+        $contractsCombined0[$clientName]['contract2End'] = $contract['clients_contrat_fermeture'];
+    } elseif ($contract['clients_contrat_fermeture'] < $yearEnd) {
+        // si le contrat finit avant la fin de l'année fiscale, on l'assigne à contrat 1
+        $contractsCombined0[$clientName]['contract1Months'] = calculateMonthsRoundedUp($yearStart, $contract['clients_contrat_fermeture']);
+        $contractsCombined0[$clientName]['contract1Budget'] = ($contract['clients_contrat_prix_vente_ht'] / calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $contract['clients_contrat_fermeture']) * $contractsCombined0[$clientName]['contract1Months']);
+        $contractsCombined0[$clientName]['contract1Start'] = $contract['clients_contrat_ouverture'];
+        $contractsCombined0[$clientName]['contract1End'] = $contract['clients_contrat_fermeture'];
+    } else {
+        // si le contrat englobe toute l'année fiscale, on l'assigne à contrat 1 par défaut
+        if (is_null($contractsCombined0[$clientName]['contract1Budget'])) {
+            $contractsCombined0[$clientName]['contract1Months'] = calculateMonthsRoundedUp($yearStart, $contract['clients_contrat_fermeture']);
+            $contractsCombined0[$clientName]['contract1Budget'] = ($contract['clients_contrat_prix_vente_ht'] / calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $contract['clients_contrat_fermeture']) * $contractsCombined0[$clientName]['contract1Months']);
+            $contractsCombined0[$clientName]['contract1Start'] = $contract['clients_contrat_ouverture'];
+            $contractsCombined0[$clientName]['contract1End'] = $contract['clients_contrat_fermeture'];
+        } else {
+            // on assigne à contrat 2 si contrat 1 est déjà rempli
+            $contractsCombined0[$clientName]['contract2Months'] = calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $yearEnd);
+            $contractsCombined0[$clientName]['contract2Budget'] = ($contract['clients_contrat_prix_vente_ht'] / calculateMonthsRoundedUp($contract['clients_contrat_ouverture'], $contract['clients_contrat_fermeture']) * $contractsCombined0[$clientName]['contract2Months']);
+            $contractsCombined0[$clientName]['contract2Start'] = $contract['clients_contrat_ouverture'];
+            $contractsCombined0[$clientName]['contract2End'] = $contract['clients_contrat_fermeture'];
+        }
+    }
+}
+
+// calcule la somme de tous les budgets
+$totalBudget0 = (array_sum(array_column($contractsCombined0, 'contract1Budget')) + array_sum(array_column($contractsCombined0, 'contract2Budget')));
+
+// transforme cette somme en temps
+$totalTime0 = floor($totalBudget0 / 50) . gmdate(":i:s", round($totalBudget0 /50 *3600) % 3600);
+
+// initialisation de tableaux de budgets totaux pour chaque mois
+for ($loopCounter = 1; $loopCounter <=12; $loopCounter++) {
+    ${'contractsCombined' . $loopCounter} = [];
+
+    // remplit le tableau de budget qui vient d'être initialisé avec les contrats courants pour ce mois-là
+    foreach ($contractsCombined0 as $clientContract) {
+        $clientName = $clientContract['clients_nom'];
+    
+        // Vérifie si une ligne existe déjà pour l'entreprise, sinon l'initialise
+        if (!isset(${'contractsCombined' . $loopCounter}[$clientName])) {
+            ${'contractsCombined' . $loopCounter}[$clientName] = [
+                'clients_nom' => $clientName,
+                'budget' => 0,
+                'time' => null,
+            ];
+        }
+
+        //crée la date de vérification du mois en cours (au 5 car certains contrats finissent au 1er)
+        if ($loopCounter <=9) {
+            $currentMonth = $year2 . '-0' . $loopCounter . '-05';
+        }
+        else {
+            $currentMonth = $year1 . '-' . $loopCounter . '-05';
+        }
+        // Vérifie si le mois est couvert par le contrat 1
+        if (check_in_range($clientContract['contract1Start'], $clientContract['contract1End'], $currentMonth)) {
+            ${'contractsCombined' . $loopCounter}[$clientName] = [
+                'clients_nom' => $clientContract['clients_nom'],
+                // Calcul du budget mensuel 
+                'budget' => ($clientContract['contract1Budget'] / $clientContract['contract1Months']),
+                // Conversion du budget en temps
+                'time' => floor(($clientContract['contract1Budget'] / $clientContract['contract1Months']) / 50) .
+                         gmdate(":i:s", round(($clientContract['contract1Budget'] / $clientContract['contract1Months']) / 50 * 3600) % 3600)
+            ];
+        }
+        // Vérifie si le mois est couvert par le contrat 2
+        elseif (check_in_range($clientContract['contract2Start'], $clientContract['contract2End'], $currentMonth)) {
+            ${'contractsCombined' . $loopCounter}[$clientName] = [
+                'clients_nom' => $clientContract['clients_nom'],
+                // Calcul du budget mensuel 
+                'budget' => ($clientContract['contract2Budget'] / $clientContract['contract2Months']),
+                // Conversion du budget en temps
+                'time' => floor(($clientContract['contract2Budget'] / $clientContract['contract2Months']) / 50) .
+                         gmdate(":i:s", round(($clientContract['contract2Budget'] / $clientContract['contract2Months']) / 50 * 3600) % 3600)
+            ];
+        }
+    }
+    // calcule la somme de tous les budgets
+    ${'totalBudget' . $loopCounter} = array_sum(array_column(${'contractsCombined' . $loopCounter}, 'budget'));
+
+    // transforme cette somme en temps
+    ${'totalTime' . $loopCounter} = floor(${'totalBudget' . $loopCounter} / 50) . gmdate(":i:s", round(${'totalBudget' . $loopCounter} /50 *3600) % 3600);
+} 
+
+////////////////////////////////////////////////////////////////////
+//------début des cumuls de clients en tableaux de référence------//
+////////////////////////////////////////////////////////////////////
+
+// ce tableau va servir de référence pour la génération des onglets
+// fait en sorte de générer pour tous les clients où il y a un budget ou un temps enregistré sans omission si l'un ou l'autre n'est pas enregistré
+
+for ($loopCounter = 0; $loopCounter <=12; $loopCounter++) {
+    ${'clientList' . $loopCounter} = [];
+
+    foreach (${'sum' . $loopCounter} as $client) {
+        if (isset($client['clients_nom'])) {
+            $clientName = $client['clients_nom'];
+
+            if (!array_key_exists($clientName, ${'clientList' . $loopCounter})) {
+                ${'clientList' . $loopCounter}[$clientName] = [
+                    'clients_nom' => $clientName,
+                ];
+            }
+        }
+    }
+
+    foreach (${'contractsCombined' . $loopCounter} as $client) {
+        if (isset($client['clients_nom'])) {
+            $clientName = $client['clients_nom'];
+
+            if ((!array_key_exists($clientName, ${'clientList' . $loopCounter})) && ($client['budget'] !== 0)) {
+                ${'clientList' . $loopCounter}[$clientName] = [
+                    'clients_nom' => $clientName,
+                ];
+            }
+        }
+    }
+}

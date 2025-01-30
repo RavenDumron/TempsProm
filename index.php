@@ -57,7 +57,7 @@ require_once(__DIR__ . '/variables.php');
 
 
             <!--boucle de génération du contenu des onglets-->
-            <?php while ($tabCounter < 13) : ?> 
+            <?php for ($tabCounter = 0; $tabCounter <=12; $tabCounter++) : ?> 
                 <div id="tabs-<?php echo ($tabCounter)?>"> <!--donne le nom de l'onglet en fonction de l'état actuel du compteur de contrôle de la boucle-->
                      <div><strong>Temps d'intervention pour la période <?php echo(fillPeriod($tabCounter))?></strong></div></br>
                     <!--s'assure qu'il y a bien du contenu à afficher, sinon renvoie une erreur-->
@@ -70,16 +70,18 @@ require_once(__DIR__ . '/variables.php');
                                 <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Temps hors mission</th>
                             </tr>
                             <?php $clientCounter = 1; //activation du compteur pour rendre unique chaque bouton de sous-tableau de détail de temps ?>
-                            <?php foreach (${'sum' . $tabCounter} as $client_times): //boucle pour générer une ligne de temps pour chaque société ?>
-                                <?php if ($client_times['clients_nom'] != 'Prometech'): //exclusion de Prometech pour pouvoir le mettre en fin de tableau ?>
-                                        <!--script pour les boutons permettant d'afficher le sous-tableau de détail de chaque temps-->
-                                        <!--nomenclature boutons : Tab(numéro de l'onglet en cours)/Wrapper ou Opener A ou B (A=infogerance, B=hors mission)/numéro du client en cours-->
-                                        <script type="text/javascript">
+                            <?php foreach (${'clientList' . $tabCounter} as $client): //boucle pour générer une ligne de temps pour chaque société ?>
+                                <!--exclusion de Prometech pour pouvoir le mettre en fin de tableau, ainsi que des clients sans temps renseigné pour le mois-->
+                                <?php if (($client['clients_nom'] != 'Prometech') && array_key_exists($client['clients_nom'], ${'sum' . $tabCounter})): ?>
+                                    <?php $currentClient = $client['clients_nom']; // on récupère le nom du client pour pouvoir le rechercher dans les tableaux externes?>
+                                    <!--script pour les boutons permettant d'afficher le sous-tableau de détail de chaque temps-->
+                                    <!--nomenclature boutons : Tab(numéro de l'onglet en cours)/Wrapper ou Opener A ou B (A=infogerance, B=hors mission)/numéro du client en cours-->
+                                    <script type="text/javascript">
                                         $(document).ready(function() {
 
                                             $('#Tab<?php echo ($tabCounter)?>WrapperA<?php echo ($clientCounter)?>').dialog({
                                                 autoOpen: false,
-                                                title: 'Détail infogérance <?php echo($client_times['clients_nom'])?>',
+                                                title: 'Détail infogérance <?php echo($client['clients_nom'])?>',
                                                 width: 'auto',
                                                 maxHeight: 750,
                                                 height: 'auto'
@@ -89,7 +91,7 @@ require_once(__DIR__ . '/variables.php');
                                             });
                                             $('#Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>').dialog({
                                                 autoOpen: false,
-                                                title: 'Détail infogérance <?php echo($client_times['clients_nom'])?>',
+                                                title: 'Détail infogérance <?php echo($client['clients_nom'])?>',
                                                 width: 'auto',
                                                 maxHeight: 750,
                                                 height: 'auto'
@@ -98,12 +100,11 @@ require_once(__DIR__ . '/variables.php');
                                                 $('#Tab<?php echo ($tabCounter)?>WrapperB<?php echo ($clientCounter)?>').dialog('open');
                                             });
                                         });
-                                        </script>
+                                    </script>
                                     <tr>
                                         <!--nom de l'entreprise cliente-->
-                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo $client_times['clients_nom'];?></td>
+                                        <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;"><?php echo $currentClient;?></td>
                                         <!--temps budgetisé-->
-                                        <?php $currentClient = $client_times['clients_nom']; // on récupère le nom du client pour pouvoir le rechercher dans le tableau des budgets?>
                                         <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                             <?php if ($tabCounter ===0): //l'onglet est l'année ?>
                                                 <?php if (isset(${'contractsCombined' . $tabCounter}[$currentClient])): //vérifie si une ligne existe pour le client ?>
@@ -131,9 +132,9 @@ require_once(__DIR__ . '/variables.php');
                                         <!--temps d'infogérance-->
                                         <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                             <!--conversion des secondes en heures:minutes:secondes-->
-                                            <?php echo floor($client_times['temps_infogerance'] / 3600) . gmdate(":i:s", $client_times['temps_infogerance'] % 3600);?>
+                                            <?php echo floor(${'sum' . $tabCounter}[$currentClient]['temps_infogerance'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}[$currentClient]['temps_infogerance'] % 3600);?>
                                             <!--bouton pour afficher le sous-tableau de détail des temps dans les onglets de mois, si présent-->
-                                            <?php if (($tabCounter > 0) && ($client_times['temps_infogerance'] > 0)) :?>
+                                            <?php if (($tabCounter > 0) && (${'sum' . $tabCounter}[$currentClient]['temps_infogerance'] > 0)) :?>
                                                 <button id="Tab<?php echo ($tabCounter)?>OpenerA<?php echo ($clientCounter)?>" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
                                                     <i class="fa-regular fa-window-restore"></i>
                                                 </button>
@@ -147,7 +148,7 @@ require_once(__DIR__ . '/variables.php');
                                                             <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Détail d'intervention</th>
                                                         </tr>
                                                         <?php foreach (${'extract' . $tabCounter} as $client_details): ?>
-                                                            <?php if (($client_details['clients_nom'] === $client_times['clients_nom']) && ($client_details['temps_infogerance'] !== NULL)): ?>
+                                                            <?php if (($client_details['clients_nom'] === ${'sum' . $tabCounter}[$currentClient]['clients_nom']) && ($client_details['temps_infogerance'] !== NULL)): ?>
                                                                 <tr>
                                                                     <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                                                         <?php echo ($client_details['techniciens_nom'] . ' ' . $client_details['techniciens_prenom']);?>
@@ -174,9 +175,9 @@ require_once(__DIR__ . '/variables.php');
                                         <!--temps hors mission-->
                                         <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                             <!--conversion des secondes en heures:minutes:secondes-->
-                                            <?php echo floor($client_times['temps_hm'] / 3600) . gmdate(":i:s", $client_times['temps_hm'] % 3600);?>
+                                            <?php echo floor(${'sum' . $tabCounter}[$currentClient]['temps_hm'] / 3600) . gmdate(":i:s", ${'sum' . $tabCounter}[$currentClient]['temps_hm'] % 3600);?>
                                             <!--bouton pour afficher le sous-tableau de détail des temps-->
-                                            <?php if (($tabCounter > 0) && ($client_times['temps_hm'] > 0)): ?>
+                                            <?php if (($tabCounter > 0) && (${'sum' . $tabCounter}[$currentClient]['temps_hm'] > 0)): ?>
                                                 <button id="Tab<?php echo ($tabCounter)?>OpenerB<?php echo ($clientCounter)?>" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
                                                     <i class="fa-regular fa-window-restore"></i>
                                                 </button>
@@ -190,7 +191,7 @@ require_once(__DIR__ . '/variables.php');
                                                             <th style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">Détail d'intervention</th>
                                                         </tr>
                                                         <?php foreach (${'extract' . $tabCounter} as $client_details): ?>
-                                                            <?php if (($client_details['clients_nom'] === $client_times['clients_nom']) && ($client_details['temps_hm'] !== NULL)): ?>
+                                                            <?php if (($client_details['clients_nom'] === ${'sum' . $tabCounter}[$currentClient]['clients_nom']) && ($client_details['temps_hm'] !== NULL)): ?>
                                                                 <tr>
                                                                     <td style="border: 1px solid black; padding: 4px; position: relative; text-align: left;">
                                                                         <?php echo ($client_details['techniciens_nom'] . ' ' . $client_details['techniciens_prenom']);?>
@@ -331,8 +332,7 @@ require_once(__DIR__ . '/variables.php');
                         <div class="alert alert-danger" role="alert">Aucune intervention enregistrée pour la période <strong><?php echo(fillPeriod($tabCounter))?></strong></div>
                     <?php endif; ?>
                 </div>
-                <?php $tabCounter++; ?>
-            <?php endwhile; ?>
+            <?php endfor; ?>
         </article></br>
     </div>
 

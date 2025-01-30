@@ -56,9 +56,9 @@ function calculateMonthsRoundedUp($startDate, $endDate) {
 
     $start = new DateTime($startDate);
     $end = new DateTime($endDate);
-    $interval = $start->diff($end);
+    $interval = date_diff($start, $end);
 
-    $months = $interval->m + ($interval->d > 0 ? 1 : 0);
+    $months = ($interval->y * 12) + $interval->m + ($interval->d > 0 ? 1 : 0);
 
     return $months;
 }
