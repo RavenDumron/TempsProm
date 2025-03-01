@@ -114,6 +114,12 @@ foreach ($extract0 as $intervention) {
 for ($sumCounter = 0; $sumCounter <=12; $sumCounter++) {
     // initialisation de tableaux pour cumuler les temps de chaque client, où 0=année sélectionnée, 1=janvier, 2=février, etc. 
     ${'sum' . $sumCounter} = [];
+    // ajoute une ligne Prometech par défaut pour éviter les erreurs s'il n'y a aucune intervention Prometech comme sa ligne sera générée dans les onglets même si aucune intervention
+    ${'sum' . $sumCounter}['Prometech'] = [
+        'clients_nom' => 'Prometech',
+        'temps_infogerance' => 0,
+        'temps_hm' => 0,
+    ]; 
 
     // incrémente en commençant par le tableau de l'année, puis de chaque mois 
     // /!\ Attention, l'ordre des mois est celui calendaire, donc 1-9 sont année n+1, et 10-12 année n
