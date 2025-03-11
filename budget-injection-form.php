@@ -3,6 +3,8 @@
 //inclusions des variables et de la config SQL
 require_once(__DIR__ . '/config/mysql.php');
 require_once(__DIR__ . '/databaseconnect.php');
+require_once(__DIR__ . '/functions.php');
+require_once(__DIR__ . '/variables.php');
 
 ?>
 
@@ -25,8 +27,12 @@ require_once(__DIR__ . '/databaseconnect.php');
         <h1>Mise à jour d'un client</h1>
         <form action="submit_create.php" method="post" enctype="multipart/form-data">
     <div>
-        <br><label for="title">Client à mettre à jour</label></br>
-        <input type="text" name="title">
+        <br><label for="title">Sélectionnez un client :</label></br>
+        <select id="client_id" name="clients">
+            <?php foreach ($client_form as $temp_client_form): ?>
+                <option value="<?php echo $temp_client_form['clients_id']?>"><?php echo $temp_client_form['clients_nom']?></option>
+            <?php endforeach; ?>
+        </select>
     </div>
     <div>
         <br><label for="recipe">Instructions</label></br>

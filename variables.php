@@ -314,3 +314,20 @@ for ($loopCounter = 0; $loopCounter <=12; $loopCounter++) {
         }
     }
 }
+
+/////////////////////////////////////////////////////////////////////
+//--------début de l'extraction des clients et de leurs IDs--------//
+/////////////////////////////////////////////////////////////////////
+
+// on récupère la liste des clients et de leurs IDs pour le formulaire de sélection du client
+$SQLclient_form = $mysqlClient->prepare(
+    "SELECT 
+        clients_nom, 
+        clients_id
+    FROM clients 
+    ORDER BY clients_nom ASC"
+    );
+
+$SQLclient_form ->execute();
+
+$client_form = $SQLclient_form->fetchAll();
