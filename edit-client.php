@@ -16,7 +16,7 @@ require_once(__DIR__ . '/variables.php');
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Temps d'intervention Prometech - Formulaire</title>
+    <title>Temps d'intervention Prometech - Modifier un client</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -25,7 +25,7 @@ require_once(__DIR__ . '/variables.php');
     <div class="container">
         <?php require_once(__DIR__ . '/header.php'); ?>
         <h1>Mise à jour d'un client</h1>
-        <form action="submit_create.php" method="post" enctype="multipart/form-data">
+        <form action="submit-client.php" method="post" enctype="multipart/form-data">
     <div>
         <br><label for="title">Sélectionnez un client :</label></br>
         <select id="client_id" name="clients">
@@ -34,11 +34,7 @@ require_once(__DIR__ . '/variables.php');
             <?php endforeach; ?>
         </select>
     </div>
-    <div>
-        <br><label for="recipe">Instructions</label></br>
-       <textarea placeholder="Expliquez-nous comment mijoter ce plat délicieux !" name="recipe"></textarea>
-    </div>
-    <br><button type="submit">Envoyer</button></br>
+    <br><button type="submit">Valider</button></br>
 </form>
         <br />
     </div>
